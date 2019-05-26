@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Crashday Smart Launcher</title>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-table-filter-control.css" />
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.14.2/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+
+        <div class="col-2 mt-5">
+          <div class="card sticky-top mt-2 p-1">
+            <a class="btn btn-primary m-1" id="save-config-button">Save</a>
+            <a class="btn btn-primary m-1" id="play-button">Save and play</a>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="" id="launch-default">
+              <label class="form-check-label" for="launch-default">
+                Use default launcher
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="" id="mods-testing-checkbox">
+              <label class="form-check-label" for="mods-testing-checkbox">
+                Mod testing mode
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-10">
+          <table id="table" data-search="true" data-filter-control="true"></table>
+        </div>
+
+      </div>
+    </div>
+
+    <script>window.$ = window.jQuery = require('../js/jquery-3.4.1.min.js');</script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.14.2/dist/bootstrap-table.min.js"></script>
+    <script src="../js/bootstrap-table-filter-control.js"></script>
+    <script>
+      // You can also require other files to run in this process
+      require('../renderer.js')
+    </script>
+  </body>
+</html>
