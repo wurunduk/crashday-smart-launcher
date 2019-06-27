@@ -3,15 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <title>Crashday Smart Launcher</title>
-    <link rel="stylesheet" type="text/css" href="../css/bootstrap-table-filter-control.css" />
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.14.2/dist/bootstrap-table.min.css">
     <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../css/style.css" />
   </head>
   <body>
-    <div class="container-fluid">
+    <div class="container-fluid mr-5">
       <div class="row">
-
         <div class="col-2 mt-5">
           <div class="card sticky-top mt-2 p-1">
             <a class="btn btn-primary m-1" id="save-config-button">Save</a>
@@ -28,11 +26,25 @@
                 Mod testing mode
               </label>
             </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" autocomplete="off" id="mods-disable-checkbox">
+              <label class="form-check-label" for="mods-disable-checkbox">
+                Disable mods
+              </label>
+            </div>
+            <label>Mods enabled:</label>
+            <label id='mods-amount'>0/0</label>
           </div>
         </div>
 
-        <div class="col-10">
-          <table id="table" data-search="true" data-filter-control="true"></table>
+        <div class="col-10 pr-5">
+         <div id="loading" class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+          </div>
+
+          <table id="table"></table>
         </div>
 
       </div>
