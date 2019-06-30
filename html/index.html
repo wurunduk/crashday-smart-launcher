@@ -8,7 +8,22 @@
     <link rel="stylesheet" type="text/css" href="../css/style.css" />
   </head>
   <body>
-    <div class="container-fluid mr-5">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li id="defaultTab" class="nav-item active tablinks"><a class="nav-link" id="tabMods">Mod list</a></li>
+          <li class="nav-item tablinks"><a class="nav-link" id="tabCollections">Collections</a></li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item "><a class="nav-link" id="crashdaycenter-link" target="_blank" href="https://crashdaycenter.com/">crashdaycenter.com</a></li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </nav>
+
+    <div id="mods" class="container-fluid mr-5 tabcontent">
       <div class="row">
         <div class="col-2 mt-5">
           <div class="card sticky-top mt-2 p-1">
@@ -35,7 +50,6 @@
             <label id='mods-amount'>Mods enabled: 0/0</label>
           </div>
         </div>
-
         <div class="col-10 pr-5">
          <div id="loading" class="d-flex justify-content-center">
             <div class="spinner-border" role="status">
@@ -45,7 +59,12 @@
 
           <table id="table"></table>
         </div>
+      </div>
+    </div>
 
+    <div id="collections" class="container-fluid mr-5 tabcontent">
+      <div class="row">
+        
       </div>
     </div>
 
@@ -53,7 +72,6 @@
     <script src="../js/bootstrap.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.15.2/dist/bootstrap-table.min.js"></script>
     <script>
-      // You can also require other files to run in this process
       require('../renderer.js')
     </script>
   </body>

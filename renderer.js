@@ -16,6 +16,40 @@ var defaultLauncherCheckbox = document.getElementById('launch-default')
 var modTestingCheckbox = document.getElementById('mods-testing-checkbox')
 var modDisableCheckbox = document.getElementById('mods-disable-checkbox')
 
+//
+//Navbar stuff
+//
+$(document).on('click', 'a[href^="http"]', (event) => {
+  event.preventDefault()
+  let link = event.target.href
+  shell.openExternal(link)
+})
+
+$("#tabMods").on('click', (e) => openTab(e, 'mods'))
+$("#tabCollections").on('click', (e) => openTab(e, 'collections'))
+
+document.getElementById("defaultTab").click();
+
+function openTab(evt, tabName) {
+  var i, tabcontent, tablinks;
+
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.parentNode.className += " active";
+}
+
 var launcherConfig = LoadConfig()
 
 document.getElementById('mods-testing-checkbox').checked = launcherConfig['ModTesting']
@@ -60,7 +94,7 @@ $('#table').on('uncheck-some.bs.table', function(e, rows){
 })
 
 //
-//Left menu
+//Left menu of mods list
 //
 modTestingCheckbox.addEventListener('click', function (){
   launcherConfig['ModTesting'] = modTestingCheckbox.checked
