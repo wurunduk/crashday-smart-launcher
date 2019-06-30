@@ -133,7 +133,7 @@ function LoadWorkshop(){
       table['search'] = true
       table['clickToSelect'] = true
       table['maintainMetaData'] = true
-      table['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'id', title: 'ID', sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID'}, {field: 'tags', title: 'Tags', sortable: true}]
+      table['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID'}, {field: 'tags', title: 'Tags', sortable: true}]
       table['rowStyle'] = rowStyle
       table['data'] = []
       for(i in answer['publishedfiledetails']){
