@@ -10,11 +10,9 @@ const fs = require('fs')
 var activeModsAmount = 0
 var totalModsAmount = 0
 
-var saveConfigButton = document.getElementById('save-config-button')
-var playButton = document.getElementById('play-button')
+var selectedCollection = ""
+
 var defaultLauncherCheckbox = document.getElementById('launch-default')
-var modTestingCheckbox = document.getElementById('mods-testing-checkbox')
-var modDisableCheckbox = document.getElementById('mods-disable-checkbox')
 
 //
 //Navbar stuff
@@ -50,79 +48,140 @@ function openTab(evt, tabName) {
   evt.currentTarget.parentNode.className += " active";
 }
 
+
 var launcherConfig = LoadConfig()
 
-document.getElementById('mods-testing-checkbox').checked = launcherConfig['ModTesting']
-document.getElementById('mods-disable-checkbox').checked = launcherConfig['DisableMods']
+document.getElementById('mods-testing').checked = launcherConfig['ModTesting']
+document.getElementById('mods-disabled').checked = launcherConfig['DisableMods']
 
 LoadWorkshop()
+LoadCollections()
 
 //
-//Table checkbox controlling
+//Mods table checkbox controlling
 //
-$('#table').on('check.bs.table', function(e, row){
+$('#mods-table').on('check.bs.table', function(e, row){
   launcherConfig['WorkshopItems'][row['id']][1] = true
   activeModsAmount += 1
   UpdateModsAmount()
 })
 
-$('#table').on('uncheck.bs.table', function(e, row){
+$('#mods-table').on('uncheck.bs.table', function(e, row){
   launcherConfig['WorkshopItems'][row['id']][1] = false
   activeModsAmount -= 1
   UpdateModsAmount()
 })
 
-$('#table').on('check-all.bs.table', function(e, rowsAfter, rowsBefore){
+$('#mods-table').on('check-all.bs.table', function(e, rowsAfter, rowsBefore){
   for(r in rowsAfter) launcherConfig['WorkshopItems'][rowsAfter[r]['id']][1] = true
   activeModsAmount += rowsAfter.length - rowsBefore.length
   UpdateModsAmount()
 })
 
-$('#table').on('uncheck-all.bs.table', function(e, rowsAfter, rowsBefore){
+$('#mods-table').on('uncheck-all.bs.table', function(e, rowsAfter, rowsBefore){
   for(r in rowsBefore) launcherConfig['WorkshopItems'][rowsBefore[r]['id']][1] = false
   activeModsAmount -= rowsBefore.length + rowsAfter.length
   UpdateModsAmount()
 })
 
-$('#table').on('check-some.bs.table', function(e, rows){
-  console.log("checked some")
-  for(r in rows) UpdateModSelection(rows, r, true)
-})
-
-$('#table').on('uncheck-some.bs.table', function(e, rows){
-  for(r in rows) UpdateModSelection(rows, r, false)
-})
-
 //
 //Left menu of mods list
 //
-modTestingCheckbox.addEventListener('click', function (){
-  launcherConfig['ModTesting'] = modTestingCheckbox.checked
+$('#mods-testing').on('click', function (){
+  launcherConfig['ModTesting'] = $('#mods-testing').is(":checked")
   SaveConfig()
 })
 
-modDisableCheckbox.addEventListener('click', function (){
-  launcherConfig['DisableMods'] = modDisableCheckbox.checked
+$('#mods-disabled').on('click', function (){
+  launcherConfig['DisableMods'] = $('#mods-disabled').is(":checked")
   SaveConfig()
 })
 
-playButton.addEventListener('click', function(){
+$('#play').on('click', function(){
   SaveConfig()
   if(defaultLauncherCheckbox.checked) shell.openExternal("steam://run/508980")
   else shell.openExternal("steam://run/508980//-skiplauncher/")
 })
 
-saveConfigButton.addEventListener('click', function(){
+$('#save').on('click', function(){
   SaveConfig()
 })
 
+
+//
+//Collections
+//
+$('#activate-collection').on('click', function(e){
+  if(selectedCollection.length == 0) return;
+
+  //turn off all mods
+  for(i in launcherConfig['WorkshopItems'])
+  {
+    launcherConfig['WorkshopItems'][i][1] = false
+  }
+
+  var totalEnabledMods = 0
+
+  for(i in launcherConfig['Collections'][selectedCollection])
+  {
+    for(n in launcherConfig['WorkshopItems'])
+    {
+      if(launcherConfig['WorkshopItems'][n][0] == launcherConfig['Collections'][selectedCollection][i])
+      {
+        launcherConfig['WorkshopItems'][n][1] = true;
+        totalEnabledMods += 1
+      }
+    }
+  }
+  SaveConfig()
+  activeModsAmount = totalEnabledMods
+  UpdateModsAmount()
+})
+
+$('#new-collection').on('click', function(e){
+  var i = 1
+  //find the next available collection name
+  while(launcherConfig['Collections'].hasOwnProperty("new-collection-" + i)) i++;
+  launcherConfig['Collections']['new-collection-'+i] = []
+  //save the newly added collection
+  SaveConfig()
+  //update the list
+  UpdateCollectionsList()
+})
+
+$('#delete-collection').on('click', function(e){
+  if(selectedCollection.length == 0) return;
+
+  $('#collection-name').val("")
+  delete launcherConfig['Collections'][selectedCollection]
+  selectedCollection = ""
+  SaveConfig()
+  UpdateCollectionsList()
+})
+
+$('#collection-name').change(function(){
+  if(selectedCollection.length == 0) return;
+
+  console.log("collection name got changed")
+
+  var old = launcherConfig['Collections'][selectedCollection]
+  delete launcherConfig['Collections'][selectedCollection]
+  selectedCollection = $('#collection-name').val()
+  launcherConfig['Collections'][selectedCollection] = old
+  SaveConfig()
+  UpdateCollectionsList();
+})
+
+$('#collections').on('click-row.bs.table', function(e, row){
+  SaveConfig()
+  selectedCollection = row['name']
+  $('#collection-name').val(selectedCollection)
+})
 
 
 function UpdateModSelection(rows, row, newState)
 {
   if(launcherConfig['WorkshopItems'][rows[row]['id']][1] == newState) return
-
-  console.log(row + " " + newState)
 
   launcherConfig['WorkshopItems'][rows[row]['id']][1] = newState
   if(newState) activeModsAmount += 1
@@ -187,9 +246,32 @@ function LoadWorkshop(){
         UpdateModsAmount()
       }
       $('#loading').children().hide()
-      $('#table').bootstrapTable(table)
+      $('#mods-table').bootstrapTable(table)
     }
   }
+}
+
+function LoadCollections()
+{
+  const totalMods = {}
+  UpdateCollectionsList()
+}
+
+function UpdateCollectionsList()
+{
+  var collectionsTable = {}
+  collectionsTable['columns'] = [{field: 'name', title: 'Collections:'}]
+
+  collectionsTable['data'] = []
+  var n = 0;
+  for(i in launcherConfig['Collections'])
+  {
+    collectionsTable['data'][n] = {}
+    collectionsTable['data'][n]['name'] = i
+    n++;
+  }
+  $('#collections').bootstrapTable(collectionsTable)
+  $('#collections').bootstrapTable('load', collectionsTable['data'])
 }
 
 function rowStyle(row, index){
@@ -220,7 +302,10 @@ function rowStyle(row, index){
 }
 
 function LoadConfig(){
-  return JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config')))
+  var cfg = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config')))
+  if(!cfg.hasOwnProperty('Collections'))
+    cfg['Collections'] = {}
+  return cfg
 }
 
 function SaveConfig(){
