@@ -18,17 +18,19 @@
           <li class="nav-item tablinks"><a class="nav-link" id="tabCollections">Collections</a></li>
         </ul>
         <ul class="navbar-nav ml-auto">
+          <li class="nav-item "><a class="nav-link" target="_blank" id="update-link" style="display:none">new version is available!</a></li>
           <li class="nav-item "><a class="nav-link" id="crashdaycenter-link" target="_blank" href="https://crashdaycenter.com/">crashdaycenter.com</a></li>
         </ul>
-      </div><!-- /.navbar-collapse -->
+      </div>
     </nav>
+
+    <button type="button" class="btn btn-secondary go-top btn-lg">Back to top</button>
 
     <div id="mods" class="container-fluid mr-5 tabcontent">
       <div class="row">
         <div class="col-2 mt-5">
-          <div class="card mt-2 p-1" style="position: fixed">
-            <a class="btn btn-primary text-white m-1" id="play">Save and play</a>
-            <a class="btn btn-primary text-white m-1" id="save">Save</a>
+          <div class="card mt-2 p-1">
+            <a class="btn btn-primary btn-block text-white" id="play">Play</a>
             <div class="form-check">
               <input class="form-check-input" type="checkbox" value="" id="launch-default">
               <label class="form-check-label" for="launch-default">
@@ -47,12 +49,12 @@
                 Disable mods
               </label>
             </div>
-            <label id='mods-amount'>Mods enabled: 0/0</label>
+            <label id='mods-amount'>Mods enabled: 0\0</label>
           </div>
         </div>
 
         <div class="col-10 pr-5">
-         <div id="loading" class="d-flex justify-content-center">
+         <div class="d-flex loading justify-content-center">
             <div class="spinner-border" role="status">
               <span class="sr-only">Loading...</span>
             </div>
@@ -64,20 +66,23 @@
 
     <div id="collections" class="container-fluid mr-5 tabcontent" style="display: none">
       <div class="row">
-          <div class="col-2">
+          <div class="col-2 mt-5">
             <div class="card mt-2 p-1">
               <a class="btn btn-primary btn-block text-white" id="activate-collection">Activate collection</a>
               <a class="btn btn-danger btn-block text-white" id="delete-collection">Delete collection</a>
               <a class="btn btn-primary btn-block text-white" id="new-collection">New collection</a>
-              <input class="form-control" type="text" id="collection-name" placeholder="Collection name">
+              <input class="form-control mt-2" type="text" id="collection-name" placeholder="Collection name">
+              <label id='mods-collection-amount'>Mods in this collection: 0\0</label>
             </div>
-            <table id="collections"></table>
+            <table id="collections-list" class="mt-2"></table>
           </div>
-          <div class="col-5">
+          <div class="col-10 pr-5">
+            <div class="loading d-flex justify-content-center">
+               <div class="spinner-border" role="status">
+                 <span class="sr-only">Loading...</span>
+               </div>
+             </div>
             <table id="current-collection"></table>
-          </div>
-          <div class="col-5">
-            <table id="not-collection"></table>
           </div>
       </div>
     </div>
@@ -85,7 +90,6 @@
     <script>window.$ = window.jQuery = require('../js/jquery-3.4.1.min.js');</script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.15.2/dist/bootstrap-table.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.6/lib/draggable.bundle.js"></script>
     <script>
       require('../renderer.js')
     </script>

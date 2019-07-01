@@ -16,3 +16,11 @@ table tr{
   from {opacity: 0;}
   to {opacity: 1;}
 }
+
+.go-top {
+    position:fixed;
+    bottom:2em;
+    left:2em;
+    display:none;
+	  z-index: 5;
+}
