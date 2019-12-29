@@ -15,13 +15,12 @@ var selectedCollection = ""
 
 var defaultLauncherCheckbox = document.getElementById('launch-default')
 
-const thisVersion = "v1.3.0"
+const thisVersion = "v1.3.1"
 
 $.getJSON("https://api.github.com/repos/wurunduk/crashday-smart-launcher/tags").done(function(json) {
   var release = json[0];
-  var downloadURL = release.zipball_url;
   if (release['name'] != thisVersion) {
-    $("#update-link").attr("href", downloadURL);
+    $("#update-link").attr("href", "https://github.com/wurunduk/crashday-smart-launcher/releases/latest");
     $('#update-link').show()
   }
 });
