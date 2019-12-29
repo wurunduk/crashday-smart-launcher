@@ -1,6 +1,6 @@
 {
   "name": "crashday-smart-launcher",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "a better launcher for Crashday:Redline edition",
   "main": "main.js",
   "scripts": {

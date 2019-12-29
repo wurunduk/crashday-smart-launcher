@@ -15,7 +15,7 @@ var selectedCollection = ""
 
 var defaultLauncherCheckbox = document.getElementById('launch-default')
 
-const thisVersion = "v1.2.0"
+const thisVersion = "v1.3.0"
 
 $.getJSON("https://api.github.com/repos/wurunduk/crashday-smart-launcher/tags").done(function(json) {
   var release = json[0];
@@ -74,8 +74,9 @@ function openTab(evt, tabName) {
   evt.currentTarget.parentNode.className += " active";
 }
 
-
-var launcherConfig = LoadConfig()
+var cfg = LoadConfig();
+var launcherConfig = cfg[0];
+var collectionConfig = cfg[1];
 var steamAnswer = "";
 
 document.getElementById('mods-testing').checked = launcherConfig['ModTesting']
@@ -151,11 +152,11 @@ $('#activate-collection').on('click', function(e){
 
   var totalEnabledMods = 0
 
-  for(i in launcherConfig['Collections'][selectedCollection])
+  for(i in collectionConfig['Collections'][selectedCollection])
   {
     for(n in launcherConfig['WorkshopItems'])
     {
-      if(launcherConfig['WorkshopItems'][n][0] == launcherConfig['Collections'][selectedCollection][i])
+      if(launcherConfig['WorkshopItems'][n][0] == collectionConfig['Collections'][selectedCollection][i])
       {
         launcherConfig['WorkshopItems'][n][1] = true;
         totalEnabledMods += 1
@@ -170,8 +171,8 @@ $('#activate-collection').on('click', function(e){
 $('#new-collection').on('click', function(e){
   var i = 1
   //find the next available collection name
-  while(launcherConfig['Collections'].hasOwnProperty("new-collection-" + i)) i++;
-  launcherConfig['Collections']['new-collection-'+i] = []
+  while(collectionConfig['Collections'].hasOwnProperty("new-collection-" + i)) i++;
+  collectionConfig['Collections']['new-collection-'+i] = []
   //save the newly added collection
   SaveConfig()
   //update the list
@@ -182,7 +183,7 @@ $('#delete-collection').on('click', function(e){
   if(selectedCollection.length == 0) return;
 
   $('#collection-name').val("")
-  delete launcherConfig['Collections'][selectedCollection]
+  delete collectionConfig['Collections'][selectedCollection]
   selectedCollection = ""
   SaveConfig()
   UpdateCollectionsList()
@@ -191,12 +192,16 @@ $('#delete-collection').on('click', function(e){
 $('#collection-name').change(function(){
   if(selectedCollection.length == 0) return;
 
-  var old = launcherConfig['Collections'][selectedCollection]
-  delete launcherConfig['Collections'][selectedCollection]
+  var old = collectionConfig['Collections'][selectedCollection]
+  delete collectionConfig['Collections'][selectedCollection]
   selectedCollection = $('#collection-name').val()
-  launcherConfig['Collections'][selectedCollection] = old
+  collectionConfig['Collections'][selectedCollection] = old
   SaveConfig()
   UpdateCollectionsList();
+})
+
+$('#get-steam-collection').on('click', function(e){
+  GetCollectionFromLink()
 })
 
 $('#collections-list').on('click-row.bs.table', function(e, row){
@@ -210,17 +215,17 @@ $('#collections-list').on('click-row.bs.table', function(e, row){
 //  Collections table
 //
 $('#current-collection').on('check.bs.table', function(e, row){
-  launcherConfig['Collections'][selectedCollection].push(row['itemId'])
+  collectionConfig['Collections'][selectedCollection].push(row['itemId'])
   collectionModsAmount += 1
   UpdateCollectionModsAmount()
   SaveConfig()
 })
 
 $('#current-collection').on('uncheck.bs.table', function(e, row){
-  for(i in launcherConfig['Collections'][selectedCollection])
+  for(i in collectionConfig['Collections'][selectedCollection])
   {
-    if(launcherConfig['Collections'][selectedCollection][i] == row['itemId'])
-      launcherConfig['Collections'][selectedCollection].splice(i, 1)
+    if(collectionConfig['Collections'][selectedCollection][i] == row['itemId'])
+      collectionConfig['Collections'][selectedCollection].splice(i, 1)
   }
   collectionModsAmount -= 1
   UpdateCollectionModsAmount()
@@ -228,7 +233,7 @@ $('#current-collection').on('uncheck.bs.table', function(e, row){
 })
 
 $('#current-collection').on('check-all.bs.table', function(e, rowsAfter, rowsBefore){
-  for(r in rowsAfter) launcherConfig['Collections'][selectedCollection].push(rowsAfter[r]['itemId'])
+  for(r in rowsAfter) collectionConfig['Collections'][selectedCollection].push(rowsAfter[r]['itemId'])
   collectionModsAmount += rowsAfter.length - rowsBefore.length
   UpdateCollectionModsAmount()
   SaveConfig()
@@ -236,10 +241,10 @@ $('#current-collection').on('check-all.bs.table', function(e, rowsAfter, rowsBef
 
 $('#current-collection').on('uncheck-all.bs.table', function(e, rowsAfter, rowsBefore){
   for(r in rowsBefore) {
-    for(i in launcherConfig['Collections'][selectedCollection])
+    for(i in collectionConfig['Collections'][selectedCollection])
     {
-      if(launcherConfig['Collections'][selectedCollection][i] == rowsBefore[r]['itemId'])
-        launcherConfig['Collections'][selectedCollection].splice(i, 1)
+      if(collectionConfig['Collections'][selectedCollection][i] == rowsBefore[r]['itemId'])
+        collectionConfig['Collections'][selectedCollection].splice(i, 1)
     }
   }
 
@@ -296,6 +301,7 @@ function LoadWorkshop(){
   Http.onreadystatechange=function(){
     if(this.readyState==4 && this.status==200){
       steamAnswer = JSON.parse(Http.responseText)['response']
+
       const table = {}
       table['search'] = true
       table['clickToSelect'] = true
@@ -307,6 +313,65 @@ function LoadWorkshop(){
       $('#mods-table').bootstrapTable(table)
 
       UpdateModlistData()
+    }
+  }
+}
+
+function GetCollectionFromLink(){
+  var jsonParameter = {};
+  var collectionUrl;
+  try {
+  	collectionUrl = new URL($('#steam-collection-link').val())
+  	collectionUrl = collectionUrl.searchParams.get('id')
+  } catch(e){
+  	collectionUrl = $('#steam-collection-link').val()
+  }
+
+  jsonParameter['publishedfileids'] = [collectionUrl]
+  jsonParameter['includetags'] = true
+  jsonParameter['includeadditionalpreviews'] = false
+  jsonParameter['includechildren'] = true
+  jsonParameter['includekvtags'] = false
+  jsonParameter['includevotes'] = false
+  jsonParameter['short_description'] = false
+  jsonParameter['includeforsaledata'] = false
+  jsonParameter['includemetadata'] = false
+  jsonParameter['return_playtime_stats'] = false
+  jsonParameter['appid'] = 508980
+  jsonParameter['strip_description_bbcode'] = true
+
+  const Http = new XMLHttpRequest()
+  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
+  Http.open("GET", url)
+  Http.send()
+
+  Http.onreadystatechange=function(){
+    if(this.readyState==4 && this.status==200){
+      var response = JSON.parse(Http.responseText)['response']
+
+      if(response['publishedfiledetails'][0]['result'] != 1){
+      	console.log("uh oh")
+      	return
+      }
+
+      var name = response['publishedfiledetails'][0]['title']
+
+      var i = 0
+	  //find the next available collection name
+	  if(collectionConfig['Collections'].hasOwnProperty(name)){
+	  	i = 1
+	  	while(collectionConfig['Collections'].hasOwnProperty(name + '-' + i)) i++;
+	  }
+	  if(i != 0) name = name + '-' + i;
+
+	  collectionConfig['Collections'][name] = []
+      for(i in response['publishedfiledetails'][0]['children']){
+      	collectionConfig['Collections'][name].push(response['publishedfiledetails'][0]['children'][i]['publishedfileid'])
+      }
+	  //save the newly added collection
+	  SaveConfig()
+	  //update the list
+	  UpdateCollectionsList()
     }
   }
 }
@@ -361,9 +426,9 @@ function LoadCollection()
   for(i in steamAnswer['publishedfiledetails']){
     data[i] = {}
     data[i]['id'] = i
-    for(n in launcherConfig['Collections'][selectedCollection])
+    for(n in collectionConfig['Collections'][selectedCollection])
     {
-      if(launcherConfig['WorkshopItems'][i][0] == launcherConfig['Collections'][selectedCollection][n])
+      if(launcherConfig['WorkshopItems'][i][0] == collectionConfig['Collections'][selectedCollection][n])
       {
         data[i]['enabled'] = true
       }
@@ -386,7 +451,7 @@ function UpdateCollectionsList()
 {
   data = []
   var n = 0;
-  for(i in launcherConfig['Collections'])
+  for(i in collectionConfig['Collections'])
   {
     data[n] = {}
     data[n]['name'] = i
@@ -425,11 +490,18 @@ function rowStyle(row, index){
 
 function LoadConfig(){
   var cfg = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config')))
-  if(!cfg.hasOwnProperty('Collections'))
-    cfg['Collections'] = {}
-  return cfg
+  var colls = fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/collections.config'), {flag: 'a+'})
+  try{
+  	colls = JSON.parse(colls)
+  } catch(e){
+  	colls = {}
+  }
+  if(!colls.hasOwnProperty('Collections'))
+    colls['Collections'] = {}
+  return [cfg, colls]
 }
 
 function SaveConfig(){
   fs.writeFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config'), JSON.stringify(launcherConfig, undefined, 4))
+  fs.writeFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/collections.config'), JSON.stringify(collectionConfig, undefined, 4))
 }
