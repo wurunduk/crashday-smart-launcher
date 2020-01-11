@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>Crashday Smart Launcher</title>
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.15.2/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css">
     <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/toast.min.css" />
     <link rel="stylesheet" type="text/css" href="../css/style.css" />
   </head>
   <body>
@@ -14,15 +16,38 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
-          <li id="defaultTab" class="nav-item active tablinks"><a class="nav-link" id="tabMods">Mod list</a></li>
+          <li id="defaultTab" class="nav-item active tablinks"><a class="nav-link" id="tabMods">Mods</a></li>
           <li class="nav-item tablinks"><a class="nav-link" id="tabCollections">Collections</a></li>
         </ul>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item "><a class="nav-link" target="_blank" id="update-link" style="display:none">new version is available!</a></li>
           <li class="nav-item "><a class="nav-link" id="crashdaycenter-link" target="_blank" href="https://crashdaycenter.com/">crashdaycenter.com</a></li>
+          <li class="nav-item "><a class="nav-link" id="settings-link" data-toggle="modal" data-target="#settings-modal"><i class="icon ion-md-settings"></i></a></li>
         </ul>
       </div>
     </nav>
+
+    <div id="toaster" aria-live="polite" aria-atomic="true">
+    </div>
+
+    <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <label for="cd-file-path">crashday.exe file path</label>
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" id="cd-file-path" aria-describedby="basic-addon3">
+            </div>          
+          </div>
+        </div>
+      </div>
+    </div>
 
     <button type="button" class="btn btn-secondary go-top btn-lg">Back to top</button>
 
@@ -49,7 +74,7 @@
                 Disable mods
               </label>
             </div>
-            <label id='mods-amount'>Mods enabled: 0\0</label>
+            <label class='text-center' id='mods-amount'>Mods enabled: 0\0</label>
           </div>
         </div>
 
@@ -68,17 +93,29 @@
       <div class="row">
           <div class="col-2 mt-5">
             <div class="card mt-2 p-1">
-              <a class="btn btn-primary btn-block text-white" id="activate-collection">Activate collection</a>
-              <a class="btn btn-danger btn-block text-white" id="delete-collection">Delete collection</a>
-              <a class="btn btn-primary btn-block text-white" id="new-collection">New collection</a>
-              <input class="form-control mt-2" type="text" id="collection-name" placeholder="Collection name">
-              <label id='mods-collection-amount'>Mods in this collection: 0\0</label>
+              <a class="btn btn-primary btn-block text-white" id="deactivate-mods">Turn off all mods</a>
+              <label class='text-center' id='mods-amount-2'>Mods enabled: 0\0</label>
             </div>
             <div class="card mt-2 p-1">
-              <input class="form-control mt-2" type="text" id="steam-collection-link" placeholder="Steam collection link"></br>
-              <a class="btn btn-primary btn-block text-white" id="get-steam-collection">Get collection from steam link</a>
+              <a class="btn btn-primary btn-block text-white" id="activate-collection">Activate collection</a>
+              <a class="btn btn-primary btn-block text-white" id="new-collection">New collection</a>
+              <a class="btn btn-danger btn-block text-white" id="delete-collection">Delete collection</a>
+              <input class="form-control mt-2" type="text" id="collection-name" placeholder="Collection name">
+              <label class="text-center" id='mods-collection-amount'>Mods in this collection: 0\0</label>
             </div>
-            <table id="collections-list" class="mt-2"></table>
+            <div class="card mt-2 p-1">
+              <div class="input-group mb-3">
+                <input class="form-control" type="text" id="steam-collection-link" placeholder="Steam collection link" aria-label="Steam collection link">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="button" id="get-steam-collection">Import</button>
+                </div>
+              </div>
+              <small id="steam-collection-import-help" class="form-text text-muted">Paste a steam collection id or a link to enable all the mods from the collection which are available locally.</small>
+            </div>
+            <div class="card mt-2 p-1">
+              <div class="font-weight-bold">Collections:</div>
+              <table id="collections-list" class="mt-2"></table>
+            </div>
           </div>
           <div class="col-10 pr-5">
             <div class="loading d-flex justify-content-center">
@@ -93,6 +130,7 @@
 
     <script>window.$ = window.jQuery = require('../js/jquery-3.4.1.min.js');</script>
     <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/toast.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.15.2/dist/bootstrap-table.min.js"></script>
     <script>
       require('../renderer.js')

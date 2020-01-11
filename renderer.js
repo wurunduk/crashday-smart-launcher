@@ -15,15 +15,18 @@ var selectedCollection = ""
 
 var defaultLauncherCheckbox = document.getElementById('launch-default')
 
-const thisVersion = "v1.3.1"
+const thisVersion = "v1.4.0"
 
 $.getJSON("https://api.github.com/repos/wurunduk/crashday-smart-launcher/tags").done(function(json) {
-  var release = json[0];
+  var release = json[0]
   if (release['name'] != thisVersion) {
-    $("#update-link").attr("href", "https://github.com/wurunduk/crashday-smart-launcher/releases/latest");
+    $("#update-link").attr("href", "https://github.com/wurunduk/crashday-smart-launcher/releases/latest")
     $('#update-link').show()
+    $.toast({title: "New version found",
+             content: "Hey! New version " + release['name'] + " was released!",
+             type: 'info', delay: 5000, container: $("#toaster")})
   }
-});
+})
 
 $(window).scroll(function() {
   if ($(this).scrollTop() > 200) {
@@ -34,7 +37,7 @@ $(window).scroll(function() {
 })
 
 $('.go-top').on('click', function(e) {
-  e.preventDefault();
+  e.preventDefault()
   $('html,body').animate({
     scrollTop: 0
   }, 300)
@@ -51,35 +54,49 @@ $(document).on('click', 'a[href^="http"]', (event) => {
 $("#tabMods").on('click', (e) => openTab(e, 'mods'))
 $("#tabCollections").on('click', (e) => openTab(e, 'collections'))
 
-document.getElementById("defaultTab").click();
+document.getElementById("defaultTab").click()
 
 function openTab(evt, tabName) {
-  var i, tabcontent, tablinks;
+  var i, tabcontent, tablinks
 
   // Get all elements with class="tabcontent" and hide them
-  tabcontent = document.getElementsByClassName("tabcontent");
+  tabcontent = document.getElementsByClassName("tabcontent")
   for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
+    tabcontent[i].style.display = "none"
   }
 
   // Get all elements with class="tablinks" and remove the class "active"
-  tablinks = document.getElementsByClassName("tablinks");
+  tablinks = document.getElementsByClassName("tablinks")
   for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
+    tablinks[i].className = tablinks[i].className.replace(" active", "")
   }
 
   // Show the current tab, and add an "active" class to the button that opened the tab
-  document.getElementById(tabName).style.display = "block";
-  evt.currentTarget.parentNode.className += " active";
+  document.getElementById(tabName).style.display = "block"
+  evt.currentTarget.parentNode.className += " active"
 }
 
-var cfg = LoadConfig();
-var launcherConfig = cfg[0];
-var collectionConfig = cfg[1];
-var steamAnswer = "";
+var cfg = LoadConfig()
+var launcherConfig = cfg[0]
+var collectionConfig = cfg[1]
+SaveConfig()
+var steamAnswer = ""
 
 document.getElementById('mods-testing').checked = launcherConfig['ModTesting']
 document.getElementById('mods-disabled').checked = launcherConfig['DisableMods']
+
+if(collectionConfig['CrashdayPath'] != "")
+  $("#cd-file-path").val(collectionConfig['CrashdayPath'])
+
+$("#cd-file-path").on("change", function() {
+  var p = path.parse($(this).val()).dir
+  if(!fs.existsSync(p)) {
+    collectionConfig['CrashdayPath'] = ""
+  }
+  else collectionConfig['CrashdayPath'] = p
+
+  SaveConfig()
+})
 
 LoadWorkshop()
 LoadCollections()
@@ -140,16 +157,18 @@ $('#play').on('click', function(){
 //
 //Collections
 //
-$('#activate-collection').on('click', function(e){
-  if(selectedCollection.length == 0) return;
-
-  //turn off all mods
+$('#deactivate-mods').on('click', function(e){
   for(i in launcherConfig['WorkshopItems'])
   {
     launcherConfig['WorkshopItems'][i][1] = false
   }
 
-  var totalEnabledMods = 0
+  activeModsAmount = 0
+  UpdateModsAmount()
+})
+
+$('#activate-collection').on('click', function(e){
+  if(selectedCollection.length == 0) return
 
   for(i in collectionConfig['Collections'][selectedCollection])
   {
@@ -157,8 +176,7 @@ $('#activate-collection').on('click', function(e){
     {
       if(launcherConfig['WorkshopItems'][n][0] == collectionConfig['Collections'][selectedCollection][i])
       {
-        launcherConfig['WorkshopItems'][n][1] = true;
-        totalEnabledMods += 1
+        launcherConfig['WorkshopItems'][n][1] = true
       }
     }
   }
@@ -170,7 +188,7 @@ $('#activate-collection').on('click', function(e){
 $('#new-collection').on('click', function(e){
   var i = 1
   //find the next available collection name
-  while(collectionConfig['Collections'].hasOwnProperty("new-collection-" + i)) i++;
+  while(collectionConfig['Collections'].hasOwnProperty("new-collection-" + i)) i++
   collectionConfig['Collections']['new-collection-'+i] = []
   //save the newly added collection
   SaveConfig()
@@ -179,7 +197,7 @@ $('#new-collection').on('click', function(e){
 })
 
 $('#delete-collection').on('click', function(e){
-  if(selectedCollection.length == 0) return;
+  if(selectedCollection.length == 0) return
 
   $('#collection-name').val("")
   delete collectionConfig['Collections'][selectedCollection]
@@ -189,14 +207,14 @@ $('#delete-collection').on('click', function(e){
 })
 
 $('#collection-name').change(function(){
-  if(selectedCollection.length == 0) return;
+  if(selectedCollection.length == 0) return
 
   var old = collectionConfig['Collections'][selectedCollection]
   delete collectionConfig['Collections'][selectedCollection]
   selectedCollection = $('#collection-name').val()
   collectionConfig['Collections'][selectedCollection] = old
   SaveConfig()
-  UpdateCollectionsList();
+  UpdateCollectionsList()
 })
 
 $('#get-steam-collection').on('click', function(e){
@@ -207,6 +225,7 @@ $('#collections-list').on('click-row.bs.table', function(e, row){
   SaveConfig()
   selectedCollection = row['name']
   $('#collection-name').val(selectedCollection)
+  UpdateCollectionsList()
   LoadCollection()
 })
 
@@ -266,6 +285,7 @@ function UpdateModSelection(rows, row, newState)
 function UpdateModsAmount()
 {
   $('#mods-amount').html("Mods enabled: " + activeModsAmount + "\\" + totalModsAmount)
+  $('#mods-amount-2').html("Mods enabled: " + activeModsAmount + "\\" + totalModsAmount)
 }
 
 function UpdateCollectionModsAmount()
@@ -274,7 +294,7 @@ function UpdateCollectionModsAmount()
 }
 
 function LoadWorkshop(){
-  var jsonParameter = {};
+  var jsonParameter = {}
   jsonParameter['publishedfileids'] = []
   for(i in launcherConfig['WorkshopItems']){
     jsonParameter['publishedfileids'].push(launcherConfig['WorkshopItems'][i][0])
@@ -305,20 +325,24 @@ function LoadWorkshop(){
       table['search'] = true
       table['clickToSelect'] = true
       table['maintainMetaData'] = true
-      table['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID'}, {field: 'tags', title: 'Tags', sortable: true}]
+      table['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
       table['rowStyle'] = rowStyle
 
       $('.loading').children().hide()
       $('#mods-table').bootstrapTable(table)
 
       UpdateModlistData()
+    }else if(this.readyState == 4){
+      $.toast({title: "Connection error",
+             content: "Could not connect to steam servers. Response code " + this.status,
+             type: 'error', delay: 5000, container: $("#toaster")})
     }
   }
 }
 
 function GetCollectionFromLink(){
-  var jsonParameter = {};
-  var collectionUrl;
+  var jsonParameter = {}
+  var collectionUrl
   try {
   	collectionUrl = new URL($('#steam-collection-link').val())
   	collectionUrl = collectionUrl.searchParams.get('id')
@@ -349,7 +373,9 @@ function GetCollectionFromLink(){
       var response = JSON.parse(Http.responseText)['response']
 
       if(response['publishedfiledetails'][0]['result'] != 1){
-      	console.log("uh oh")
+      	$.toast({title: "Collection import error",
+             content: "Steam could not find collection with id " + collectionUrl,
+             type: 'error', delay: 5000, container: $("#toaster")})
       	return
       }
 
@@ -359,18 +385,27 @@ function GetCollectionFromLink(){
 	  //find the next available collection name
 	  if(collectionConfig['Collections'].hasOwnProperty(name)){
 	  	i = 1
-	  	while(collectionConfig['Collections'].hasOwnProperty(name + '-' + i)) i++;
+	  	while(collectionConfig['Collections'].hasOwnProperty(name + '-' + i)) i++
 	  }
-	  if(i != 0) name = name + '-' + i;
+	  if(i != 0) name = name + '-' + i
 
 	  collectionConfig['Collections'][name] = []
-      for(i in response['publishedfiledetails'][0]['children']){
-      	collectionConfig['Collections'][name].push(response['publishedfiledetails'][0]['children'][i]['publishedfileid'])
-      }
+    var count = 0
+    for(i in response['publishedfiledetails'][0]['children']){
+      count ++
+    	collectionConfig['Collections'][name].push(response['publishedfiledetails'][0]['children'][i]['publishedfileid'])
+    }
 	  //save the newly added collection
 	  SaveConfig()
 	  //update the list
 	  UpdateCollectionsList()
+    $.toast({title: "Collection imported",
+             content: "New collection '" + name + "' was succesfully imported with " + count + " mods.",
+             type: 'info', delay: 5000, container: $("#toaster")})
+    }else if(this.readyState == 4){
+      $.toast({title: "Connection error",
+             content: "Could not connect to steam servers. Response code " + this.status,
+             type: 'error', delay: 5000, container: $("#toaster")})
     }
   }
 }
@@ -405,7 +440,7 @@ function UpdateModlistData()
 function LoadCollections()
 {
   const currentCollectionTable = {}
-  currentCollectionTable['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'title', title: 'Name', sortable:true}, {field: 'tags', title: 'Tags', sortable:true}]
+  currentCollectionTable['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'title', title: 'Name', sortable:true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable:true}]
   currentCollectionTable['search'] = true
   currentCollectionTable['clickToSelect'] = true
   currentCollectionTable['maintainMetaData'] = true
@@ -413,9 +448,18 @@ function LoadCollections()
   $('#current-collection').bootstrapTable(currentCollectionTable)
 
   const collectionsTable = {}
-  collectionsTable['columns'] = [{field: 'name', title: 'Collections:'}]
+  collectionsTable['columns'] = [{checkbox: 'enabled', field: 'enabled', cellStyle: cellStyle}, {field: 'name', title: 'Collections:'}]
+  collectionsTable['showHeader'] = false
+  collectionsTable['clickToSelect'] = true
+  collectionsTable['singleSelect'] = true
   $('#collections-list').bootstrapTable(collectionsTable)
   UpdateCollectionsList()
+}
+
+function cellStyle(value, row, index, field){
+  return {css:{
+    display:'none'
+  }}
 }
 
 function LoadCollection()
@@ -449,23 +493,26 @@ function LoadCollection()
 function UpdateCollectionsList()
 {
   data = []
-  var n = 0;
+  var n = 0
   for(i in collectionConfig['Collections'])
   {
     data[n] = {}
     data[n]['name'] = i
-    n++;
+    if(selectedCollection != "")
+      if(i == selectedCollection)
+        data[n]['enabled'] = true
+    n++
   }
 
   $('#collections-list').bootstrapTable('load', data)
 }
 
 function rowStyle(row, index){
-  var c=0,t=0,a=0,m=0;
-  if(row['tags'].includes("Car")) c = 1;
-  if(row['tags'].includes("Track")) t = 1;
-  if(row['tags'].includes("Ambience")) a = 1;
-  if(row['tags'].includes("Misc")) m = 1;
+  var c=0,t=0,a=0,m=0
+  if(row['tags'].includes("Car")) c = 1
+  if(row['tags'].includes("Track")) t = 1
+  if(row['tags'].includes("Ambience")) a = 1
+  if(row['tags'].includes("Misc")) m = 1
 
   if(c+t+a+m > 1) return{css:{
     color: 'orange'
@@ -488,8 +535,17 @@ function rowStyle(row, index){
 }
 
 function LoadConfig(){
-  var cfg = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config')))
+  var cfg = fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config'))
   var colls = fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/collections.config'), {flag: 'a+'})
+  try{
+    cfg = JSON.parse(cfg)
+  } catch(e){
+    cfg = {}
+  }
+
+  if(!cfg.hasOwnProperty('WorkshopItems'))
+    cfg['WorkshopItems'] = []
+
   try{
   	colls = JSON.parse(colls)
   } catch(e){
@@ -497,6 +553,46 @@ function LoadConfig(){
   }
   if(!colls.hasOwnProperty('Collections'))
     colls['Collections'] = {}
+  if(!colls.hasOwnProperty('CrashdayPath')){
+    colls['CrashdayPath'] = ""
+  }
+  else{
+    if(!fs.existsSync(colls['CrashdayPath'])) {
+      colls['CrashdayPath'] = ""
+    }
+  }
+
+  if(colls['CrashdayPath'] == "")
+    $.toast({title: "crashday.exe not found",
+             content: "Specify crashday.exe path in settings to enable auto scanning for newly subscribed mods. Otherwise default launcher has to be started after subscribing to new mods.",
+             type: 'error', delay: 5000, container: $("#toaster")})
+
+  //check for new mods in the workshop folder
+  var p = path.join(colls['CrashdayPath'], '../../workshop/content/508980')
+  var foundNewMods = 0
+  if(fs.existsSync(p)){
+    fs.readdirSync(p).forEach(file => {
+      var foundFile = false
+      for(n in cfg['WorkshopItems'])
+      {
+        if(cfg['WorkshopItems'][n][0] == parseInt(file))
+        {
+          foundFile = true
+        }
+      }
+      if(!foundFile){
+        cfg['WorkshopItems'].push([parseInt(file), false])
+        foundNewMods += 1
+      }
+    })
+  }
+
+  if(foundNewMods > 0){
+    $.toast({title: "New mods found",
+             content: "Launcher found and added " + foundNewMods + " new mods.",
+             type: 'info', delay: 5000, container: $("#toaster")})
+  }
+
   return [cfg, colls]
 }
 
