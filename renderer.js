@@ -165,6 +165,7 @@ $('#deactivate-mods').on('click', function(e){
 
   activeModsAmount = 0
   UpdateModsAmount()
+  UpdateModlistData()
 })
 
 $('#activate-collection').on('click', function(e){
