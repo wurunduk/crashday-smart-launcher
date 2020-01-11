@@ -393,7 +393,7 @@ function GetCollectionFromLink(){
     var count = 0
     for(i in response['publishedfiledetails'][0]['children']){
       count ++
-    	collectionConfig['Collections'][name].push(response['publishedfiledetails'][0]['children'][i]['publishedfileid'])
+    	collectionConfig['Collections'][name].push(parseInt(response['publishedfiledetails'][0]['children'][i]['publishedfileid']))
     }
 	  //save the newly added collection
 	  SaveConfig()
@@ -546,13 +546,16 @@ function LoadConfig(){
   if(!cfg.hasOwnProperty('WorkshopItems'))
     cfg['WorkshopItems'] = []
 
+
   try{
   	colls = JSON.parse(colls)
   } catch(e){
   	colls = {}
   }
+
   if(!colls.hasOwnProperty('Collections'))
     colls['Collections'] = {}
+
   if(!colls.hasOwnProperty('CrashdayPath')){
     colls['CrashdayPath'] = ""
   }
