@@ -89,7 +89,7 @@ if(collectionConfig['CrashdayPath'] != "")
   $("#cd-file-path").val(collectionConfig['CrashdayPath'])
 
 $("#cd-file-path").on("change", function() {
-  var p = path.parse($(this).val()).dir
+  var p = path.parse($(this).val())
   if(!fs.existsSync(p)) {
     collectionConfig['CrashdayPath'] = ""
   }
