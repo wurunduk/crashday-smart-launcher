@@ -15,7 +15,7 @@ var selectedCollection = ""
 
 var defaultLauncherCheckbox = document.getElementById('launch-default')
 
-const thisVersion = "v1.4.0"
+const thisVersion = "v1.5.0"
 
 $.getJSON("https://api.github.com/repos/wurunduk/crashday-smart-launcher/tags").done(function(json) {
   var release = json[0]
@@ -89,7 +89,7 @@ if(collectionConfig['CrashdayPath'] != "")
   $("#cd-file-path").val(collectionConfig['CrashdayPath'])
 
 $("#cd-file-path").on("change", function() {
-  var p = path.parse($(this).val())
+  var p = $(this).val()
   if(!fs.existsSync(p)) {
     collectionConfig['CrashdayPath'] = ""
   }
