@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8">
     <title>Crashday Smart Launcher</title>
-    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.15.2/dist/bootstrap-table.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css">
-    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/toast.min.css" />
-    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+    <link rel="stylesheet" type="text/css" href="./lib/css/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="./lib/css/ionicons.min.css">
+    <link rel="stylesheet" type="text/css" href="./lib/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="./lib/css/toast.min.css" />
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
   </head>
   <body>
     <nav class="navbar sticky-top navbar-expand-md navbar-dark bg-dark">
@@ -18,17 +18,19 @@
         <ul class="navbar-nav">
           <li id="defaultTab" class="nav-item active tablinks"><a class="nav-link" id="tabMods">Mods</a></li>
           <li class="nav-item tablinks"><a class="nav-link" id="tabCollections">Collections</a></li>
+          <li class="nav-item tablinks"><a class="nav-link" id="tabTools">Tools</a></li>
         </ul>
         <ul class="navbar-nav ml-auto">
-          <li class="nav-item "><a class="nav-link" target="_blank" id="update-link" style="display:none">new version is available!</a></li>
+          <li class="nav-item "><a class="nav-link invisible" target="_blank" id="update-link">new version is available!</a></li>
           <li class="nav-item "><a class="nav-link" id="crashdaycenter-link" target="_blank" href="https://crashdaycenter.com/">crashdaycenter.com</a></li>
           <li class="nav-item "><a class="nav-link" id="settings-link" data-toggle="modal" data-target="#settings-modal"><i class="icon ion-md-settings"></i></a></li>
         </ul>
       </div>
     </nav>
 
-    <div id="toaster" aria-live="polite" aria-atomic="true">
-    </div>
+    <div id="toaster" aria-live="polite" aria-atomic="true"></div>
+
+    <button type="button" class="btn btn-secondary go-top btn-lg">Back to top</button>
 
     <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
@@ -48,8 +50,6 @@
         </div>
       </div>
     </div>
-
-    <button type="button" class="btn btn-secondary go-top btn-lg" style="opacity: 0.66;">Back to top</button>
 
     <div id="mods" class="container-fluid mr-5 tabcontent">
       <div class="row">
@@ -74,7 +74,7 @@
                 Disable mods
               </label>
             </div>
-            <label class='text-center' id='mods-amount'>Mods enabled: 0\0</label>
+            <label class='text-center mods-amount'>Mods enabled: 0\0</label>
           </div>
         </div>
 
@@ -89,12 +89,12 @@
       </div>
     </div>
 
-    <div id="collections" class="container-fluid mr-5 tabcontent" style="display: none">
+    <div id="collections" class="container-fluid mr-5 tabcontent invisible">
       <div class="row">
           <div class="col-2 mt-5">
             <div class="card mt-2 p-1">
               <a class="btn btn-primary btn-block text-white" id="deactivate-mods">Turn off all mods</a>
-              <label class='text-center' id='mods-amount-2'>Mods enabled: 0\0</label>
+              <label class='text-center mods-amount'>Mods enabled: 0\0</label>
             </div>
             <div class="card mt-2 p-1">
               <a class="btn btn-primary btn-block text-white" id="activate-collection">Activate collection</a>
@@ -128,12 +128,29 @@
       </div>
     </div>
 
-    <script>window.$ = window.jQuery = require('../js/jquery-3.4.1.min.js');</script>
-    <script src="../js/bootstrap.min.js"></script>
-    <script src="../js/toast.min.js"></script>
-    <script src="https://unpkg.com/bootstrap-table@1.15.2/dist/bootstrap-table.min.js"></script>
+
+    <div id="tools" class="container-fluid mr-5 tabcontent invisible">
+      <div class="row">
+          <div class="col-2 mt-5">
+            <div class="card mt-2 p-1">
+              <label class='text-center' id=''>test</label>
+            </div>
+          </div>
+          <div class="col-10 pr-5">
+          </div>
+      </div>
+    </div>
+
+
+    <script>window.$ = window.jQuery = require('./lib/js/jquery-3.4.1.min.js');</script>
+    <script src="./lib/js/bootstrap.min.js"></script>
+    <script src="./lib/js/toast.min.js"></script>
+    <script src="./lib/js/bootstrap-table.min.js"></script>
+    <script src="./js/go-to-top.js"></script>
+    <script src="./js/tabs.js"></script>
+    <script src="./js/check-update.js"></script>
     <script>
-      require('../renderer.js')
+      require('./js/renderer.js')
     </script>
   </body>
 </html>

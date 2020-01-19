@@ -15,33 +15,6 @@ var selectedCollection = ""
 
 var defaultLauncherCheckbox = document.getElementById('launch-default')
 
-const thisVersion = "v1.5.0"
-
-$.getJSON("https://api.github.com/repos/wurunduk/crashday-smart-launcher/tags").done(function(json) {
-  var release = json[0]
-  if (release['name'] != thisVersion) {
-    $("#update-link").attr("href", "https://github.com/wurunduk/crashday-smart-launcher/releases/latest")
-    $('#update-link').show()
-    $.toast({title: "New version found",
-             content: "Hey! New version " + release['name'] + " was released!",
-             type: 'info', delay: 5000, container: $("#toaster")})
-  }
-})
-
-$(window).scroll(function() {
-  if ($(this).scrollTop() > 200) {
-    $('.go-top').fadeIn(200)
-  } else {
-    $('.go-top').fadeOut(200)
-  }
-})
-
-$('.go-top').on('click', function(e) {
-  e.preventDefault()
-  $('html,body').animate({
-    scrollTop: 0
-  }, 300)
-})
 //
 //Navbar tabs controlls
 //
@@ -50,31 +23,6 @@ $(document).on('click', 'a[href^="http"]', (event) => {
   let link = event.target.href
   shell.openExternal(link)
 })
-
-$("#tabMods").on('click', (e) => openTab(e, 'mods'))
-$("#tabCollections").on('click', (e) => openTab(e, 'collections'))
-
-document.getElementById("defaultTab").click()
-
-function openTab(evt, tabName) {
-  var i, tabcontent, tablinks
-
-  // Get all elements with class="tabcontent" and hide them
-  tabcontent = document.getElementsByClassName("tabcontent")
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none"
-  }
-
-  // Get all elements with class="tablinks" and remove the class "active"
-  tablinks = document.getElementsByClassName("tablinks")
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "")
-  }
-
-  // Show the current tab, and add an "active" class to the button that opened the tab
-  document.getElementById(tabName).style.display = "block"
-  evt.currentTarget.parentNode.className += " active"
-}
 
 var cfg = LoadConfig()
 var launcherConfig = cfg[0]
@@ -285,8 +233,7 @@ function UpdateModSelection(rows, row, newState)
 
 function UpdateModsAmount()
 {
-  $('#mods-amount').html("Mods enabled: " + activeModsAmount + "\\" + totalModsAmount)
-  $('#mods-amount-2').html("Mods enabled: " + activeModsAmount + "\\" + totalModsAmount)
+  $('.mods-amount').html("Mods enabled: " + activeModsAmount + "\\" + totalModsAmount)
 }
 
 function UpdateCollectionModsAmount()
