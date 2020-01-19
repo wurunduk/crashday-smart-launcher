@@ -11,35 +11,30 @@ var activeModsAmount = 0
 var collectionModsAmount = 0
 var totalModsAmount = 0
 
-var selectedCollection = ""
+var selectedCollection = ''
 
-var defaultLauncherCheckbox = document.getElementById('launch-default')
+var cfg = LoadConfig()
+var launcherConfig = cfg[0]
+var collectionConfig = cfg[1]
+SaveConfig()
+var steamAnswer = ''
 
-//
-//Navbar tabs controlls
-//
+$('#mods-testing').prop('checked', launcherConfig['ModTesting'])
+$('#mods-disabled').prop('checked', launcherConfig['DisableMods'])
+
 $(document).on('click', 'a[href^="http"]', (event) => {
   event.preventDefault()
   let link = event.target.href
   shell.openExternal(link)
 })
 
-var cfg = LoadConfig()
-var launcherConfig = cfg[0]
-var collectionConfig = cfg[1]
-SaveConfig()
-var steamAnswer = ""
+if(collectionConfig['CrashdayPath'] != '')
+  $('#cd-file-path').val(collectionConfig['CrashdayPath'])
 
-document.getElementById('mods-testing').checked = launcherConfig['ModTesting']
-document.getElementById('mods-disabled').checked = launcherConfig['DisableMods']
-
-if(collectionConfig['CrashdayPath'] != "")
-  $("#cd-file-path").val(collectionConfig['CrashdayPath'])
-
-$("#cd-file-path").on("change", function() {
+$('#cd-file-path').on('change', function() {
   var p = $(this).val()
   if(!fs.existsSync(p)) {
-    collectionConfig['CrashdayPath'] = ""
+    collectionConfig['CrashdayPath'] = ''
   }
   else collectionConfig['CrashdayPath'] = p
 
@@ -86,19 +81,19 @@ $('#mods-table').on('uncheck-all.bs.table', function(e, rowsAfter, rowsBefore){
 //Left menu of mods list
 //
 $('#mods-testing').on('click', function (){
-  launcherConfig['ModTesting'] = $('#mods-testing').is(":checked")
+  launcherConfig['ModTesting'] = $('#mods-testing').is(':checked')
   SaveConfig()
 })
 
 $('#mods-disabled').on('click', function (){
-  launcherConfig['DisableMods'] = $('#mods-disabled').is(":checked")
+  launcherConfig['DisableMods'] = $('#mods-disabled').is(':checked')
   SaveConfig()
 })
 
 $('#play').on('click', function(){
   SaveConfig()
-  if(defaultLauncherCheckbox.checked) shell.openExternal("steam://run/508980")
-  else shell.openExternal("steam://run/508980//-skiplauncher/")
+  if($('#use-default-launcher').is(':checked')) shell.openExternal('steam://run/508980')
+  else shell.openExternal('steam://run/508980//-skiplauncher/')
 })
 
 
@@ -137,7 +132,7 @@ $('#activate-collection').on('click', function(e){
 $('#new-collection').on('click', function(e){
   var i = 1
   //find the next available collection name
-  while(collectionConfig['Collections'].hasOwnProperty("new-collection-" + i)) i++
+  while(collectionConfig['Collections'].hasOwnProperty('new-collection-' + i)) i++
   collectionConfig['Collections']['new-collection-'+i] = []
   //save the newly added collection
   SaveConfig()
@@ -148,9 +143,9 @@ $('#new-collection').on('click', function(e){
 $('#delete-collection').on('click', function(e){
   if(selectedCollection.length == 0) return
 
-  $('#collection-name').val("")
+  $('#collection-name').val('')
   delete collectionConfig['Collections'][selectedCollection]
-  selectedCollection = ""
+  selectedCollection = ''
   SaveConfig()
   UpdateCollectionsList()
 })
@@ -233,12 +228,12 @@ function UpdateModSelection(rows, row, newState)
 
 function UpdateModsAmount()
 {
-  $('.mods-amount').html("Mods enabled: " + activeModsAmount + "\\" + totalModsAmount)
+  $('.mods-amount').html('Mods enabled: ' + activeModsAmount + '\\' + totalModsAmount)
 }
 
 function UpdateCollectionModsAmount()
 {
-  $('#mods-collection-amount').html("Mods in this collection: " + collectionModsAmount + "\\" + totalModsAmount)
+  $('#mods-collection-amount').html('Mods in this collection: ' + collectionModsAmount + '\\' + totalModsAmount)
 }
 
 function LoadWorkshop(){
@@ -262,7 +257,7 @@ function LoadWorkshop(){
 
   const Http = new XMLHttpRequest()
   const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
-  Http.open("GET", url)
+  Http.open('GET', url)
   Http.send()
 
   Http.onreadystatechange=function(){
@@ -273,6 +268,7 @@ function LoadWorkshop(){
       table['search'] = true
       table['clickToSelect'] = true
       table['maintainMetaData'] = true
+      table['classes'] = 'table table-hover'
       table['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
       table['rowStyle'] = rowStyle
 
@@ -281,9 +277,9 @@ function LoadWorkshop(){
 
       UpdateModlistData()
     }else if(this.readyState == 4){
-      $.toast({title: "Connection error",
-             content: "Could not connect to steam servers. Response code " + this.status,
-             type: 'error', delay: 5000, container: $("#toaster")})
+      $.toast({title: 'Connection error',
+             content: 'Could not connect to steam servers. Response code ' + this.status,
+             type: 'error', delay: 5000, container: $('#toaster')})
     }
   }
 }
@@ -313,7 +309,7 @@ function GetCollectionFromLink(){
 
   const Http = new XMLHttpRequest()
   const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
-  Http.open("GET", url)
+  Http.open('GET', url)
   Http.send()
 
   Http.onreadystatechange=function(){
@@ -321,9 +317,9 @@ function GetCollectionFromLink(){
       var response = JSON.parse(Http.responseText)['response']
 
       if(response['publishedfiledetails'][0]['result'] != 1){
-      	$.toast({title: "Collection import error",
-             content: "Steam could not find collection with id " + collectionUrl,
-             type: 'error', delay: 5000, container: $("#toaster")})
+      	$.toast({title: 'Collection import error',
+             content: 'Steam could not find collection with id ' + collectionUrl,
+             type: 'error', delay: 5000, container: $('#toaster')})
       	return
       }
 
@@ -347,13 +343,13 @@ function GetCollectionFromLink(){
 	  SaveConfig()
 	  //update the list
 	  UpdateCollectionsList()
-    $.toast({title: "Collection imported",
-             content: "New collection '" + name + "' was succesfully imported with " + count + " mods.",
-             type: 'info', delay: 5000, container: $("#toaster")})
+    $.toast({title: 'Collection imported',
+             content: 'New collection ' + name + ' was succesfully imported with ' + count + ' mods.',
+             type: 'info', delay: 5000, container: $('#toaster')})
     }else if(this.readyState == 4){
-      $.toast({title: "Connection error",
-             content: "Could not connect to steam servers. Response code " + this.status,
-             type: 'error', delay: 5000, container: $("#toaster")})
+      $.toast({title: 'Connection error',
+             content: 'Could not connect to steam servers. Response code ' + this.status,
+             type: 'error', delay: 5000, container: $('#toaster')})
     }
   }
 }
@@ -372,9 +368,9 @@ function UpdateModlistData()
     if(data[i]['enabled']) activeModsAmount += 1
     data[i]['itemId'] = launcherConfig['WorkshopItems'][i][0]
     data[i]['title'] = steamAnswer['publishedfiledetails'][i]['title']
-    data[i]['tags'] = ""
+    data[i]['tags'] = ''
     for(n in steamAnswer['publishedfiledetails'][i]['tags']){
-      if(n>0) data[i]['tags'] += ", "
+      if(n>0) data[i]['tags'] += ', '
 
       data[i]['tags'] += steamAnswer['publishedfiledetails'][i]['tags'][n]['tag']
     }
@@ -393,6 +389,7 @@ function LoadCollections()
   currentCollectionTable['clickToSelect'] = true
   currentCollectionTable['maintainMetaData'] = true
   currentCollectionTable['rowStyle'] = rowStyle
+  currentCollectionTable['classes'] = 'table table-hover'
   $('#current-collection').bootstrapTable(currentCollectionTable)
 
   const collectionsTable = {}
@@ -427,9 +424,9 @@ function LoadCollection()
     if(data[i]['enabled']) collectionModsAmount += 1
     data[i]['itemId'] = launcherConfig['WorkshopItems'][i][0]
     data[i]['title'] = steamAnswer['publishedfiledetails'][i]['title']
-    data[i]['tags'] = ""
+    data[i]['tags'] = ''
     for(n in steamAnswer['publishedfiledetails'][i]['tags']){
-      if(n>0) data[i]['tags'] += ", "
+      if(n>0) data[i]['tags'] += ', '
 
       data[i]['tags'] += steamAnswer['publishedfiledetails'][i]['tags'][n]['tag']
     }
@@ -446,7 +443,7 @@ function UpdateCollectionsList()
   {
     data[n] = {}
     data[n]['name'] = i
-    if(selectedCollection != "")
+    if(selectedCollection != '')
       if(i == selectedCollection)
         data[n]['enabled'] = true
     n++
@@ -457,10 +454,10 @@ function UpdateCollectionsList()
 
 function rowStyle(row, index){
   var c=0,t=0,a=0,m=0
-  if(row['tags'].includes("Car")) c = 1
-  if(row['tags'].includes("Track")) t = 1
-  if(row['tags'].includes("Ambience")) a = 1
-  if(row['tags'].includes("Misc")) m = 1
+  if(row['tags'].includes('Car')) c = 1
+  if(row['tags'].includes('Track')) t = 1
+  if(row['tags'].includes('Ambience')) a = 1
+  if(row['tags'].includes('Misc')) m = 1
 
   if(c+t+a+m > 1) return{css:{
     color: 'orange'
@@ -505,18 +502,18 @@ function LoadConfig(){
     colls['Collections'] = {}
 
   if(!colls.hasOwnProperty('CrashdayPath')){
-    colls['CrashdayPath'] = ""
+    colls['CrashdayPath'] = ''
   }
   else{
     if(!fs.existsSync(colls['CrashdayPath'])) {
-      colls['CrashdayPath'] = ""
+      colls['CrashdayPath'] = ''
     }
   }
 
-  if(colls['CrashdayPath'] == "")
-    $.toast({title: "crashday.exe not found",
-             content: "Specify crashday.exe path in settings to enable auto scanning for newly subscribed mods. Otherwise default launcher has to be started after subscribing to new mods.",
-             type: 'error', delay: 5000, container: $("#toaster")})
+  if(colls['CrashdayPath'] == '')
+    $.toast({title: 'crashday.exe not found',
+             content: 'Specify crashday.exe path in settings to enable auto scanning for newly subscribed mods. Otherwise default launcher has to be started after subscribing to new mods.',
+             type: 'error', delay: 5000, container: $('#toaster')})
 
   //check for new mods in the workshop folder
   var p = path.join(colls['CrashdayPath'], '../../workshop/content/508980')
@@ -539,9 +536,9 @@ function LoadConfig(){
   }
 
   if(foundNewMods > 0){
-    $.toast({title: "New mods found",
-             content: "Launcher found and added " + foundNewMods + " new mods.",
-             type: 'info', delay: 5000, container: $("#toaster")})
+    $.toast({title: 'New mods found',
+             content: 'Launcher found and added ' + foundNewMods + ' new mods.',
+             type: 'info', delay: 5000, container: $('#toaster')})
   }
 
   return [cfg, colls]
