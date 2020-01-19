@@ -18,6 +18,7 @@ var launcherConfig = cfg[0]
 var collectionConfig = cfg[1]
 SaveConfig()
 var steamAnswer = ''
+var missingMods = []
 
 $('#mods-testing').prop('checked', launcherConfig['ModTesting'])
 $('#mods-disabled').prop('checked', launcherConfig['DisableMods'])
@@ -43,7 +44,6 @@ $('#cd-file-path').on('change', function() {
 
 LoadWorkshop()
 LoadCollections()
-
 
 //
 //Main mods table controlls
@@ -109,45 +109,153 @@ $('#deactivate-mods').on('click', function(e){
   activeModsAmount = 0
   UpdateModsAmount()
   UpdateModlistData()
+  $.toast({title: 'All mods were turned off!',
+           type: 'success', delay: 5000, container: $('#toaster')})
 })
 
 $('#activate-collection').on('click', function(e){
   if(selectedCollection.length == 0) return
 
+  var notFoundMods = 0
+  var modsEnabled = 0
+  missingMods = []
   for(i in collectionConfig['Collections'][selectedCollection])
   {
+    var found = false
     for(n in launcherConfig['WorkshopItems'])
     {
       if(launcherConfig['WorkshopItems'][n][0] == collectionConfig['Collections'][selectedCollection][i])
       {
+        found = true
+        modsEnabled += 1
         launcherConfig['WorkshopItems'][n][1] = true
       }
+    }
+    if(!found){
+      notFoundMods += 1
+      missingMods.push(collectionConfig['Collections'][selectedCollection][i])
     }
   }
   SaveConfig()
   UpdateModsAmount()
   UpdateModlistData()
+  $.toast({title: 'Collection activated!',
+           content: 'Succesfully activated collection ' + selectedCollection + ' with ' + modsEnabled + ' mods. Total mods activated: ' + activeModsAmount,
+           type: 'success', delay: 5000, container: $('#toaster')})
+
+  //some of the mods were not found, prepare modal window and show a warning
+  if(notFoundMods > 0){
+    console.log(missingMods)
+    $.toast({title: 'Mods missing!',
+           content: notFoundMods + ` of the mods which are in this collection are missing on the local machine! 
+           You need to subscribe to them in steam.<br/>
+           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#MissingModsModal">
+            Show list
+           </button>`,
+           type: 'warning', delay: -1, pause_on_hover:true, container: $('#toaster')})
+    PrepareMissingModsModal()
+  }
 })
+
+function PrepareMissingModsModal(){
+  $('#MissingModaLoading').children().show()
+  var jsonParameter = {}
+  jsonParameter['publishedfileids'] = []
+  for(i in missingMods){
+    jsonParameter['publishedfileids'].push(missingMods[i])
+  }
+
+  jsonParameter['includetags'] = true
+  jsonParameter['includeadditionalpreviews'] = false
+  jsonParameter['includechildren'] = false
+  jsonParameter['includekvtags'] = false
+  jsonParameter['includevotes'] = false
+  jsonParameter['short_description'] = false
+  jsonParameter['includeforsaledata'] = false
+  jsonParameter['includemetadata'] = false
+  jsonParameter['return_playtime_stats'] = false
+  jsonParameter['appid'] = 508980
+  jsonParameter['strip_description_bbcode'] = true
+
+  const Http = new XMLHttpRequest()
+  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
+  Http.open('GET', url)
+  Http.send()
+
+  Http.onreadystatechange=function(){
+    if(this.readyState==4 && this.status==200){
+      var answer = JSON.parse(Http.responseText)['response']
+
+      $('#MissingModsList').html('')
+      for(i in answer['publishedfiledetails']){
+        $('#MissingModsList').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + answer['publishedfiledetails'][i]['title'] + '</a><br/>')
+      }
+      
+    }else if(this.readyState == 4){
+      $('#MissingModsList').html('')
+      for(i in answer['publishedfiledetails']){
+        $('#MissingModsList').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + missingMods[i] + '</a><br/>')
+      }
+
+      $.toast({title: 'Connection error',
+             content: 'Could not connect to steam servers. Response code ' + this.status,
+             type: 'error', delay: 5000, container: $('#toaster')})
+    }
+    $('#MissingModaLoading').children().hide()
+  }
+}
 
 $('#new-collection').on('click', function(e){
   var i = 1
   //find the next available collection name
   while(collectionConfig['Collections'].hasOwnProperty('new-collection-' + i)) i++
-  collectionConfig['Collections']['new-collection-'+i] = []
+  var name = 'new-collection-'+i
+  collectionConfig['Collections'][name] = []
   //save the newly added collection
   SaveConfig()
-  //update the list
+  selectedCollection = name
+  $('#collection-name').val(selectedCollection)
   UpdateCollectionsList()
+  LoadCollection()
+  $.toast({title: 'Collection created!',
+           content: name + ' was created.',
+           type: 'success', delay: 5000, container: $('#toaster')})
+})
+
+$('#remove-missing-mods').on('click', function(e){
+  var removedMods = 0
+  for(n in missingMods){
+    for(i in collectionConfig['Collections'][selectedCollection])
+    {
+      if(collectionConfig['Collections'][selectedCollection][i] == missingMods[n]){
+        collectionConfig['Collections'][selectedCollection].splice(i, 1)
+        removedMods += 1
+        break
+      }
+    }
+    collectionModsAmount -= 1
+  }
+  SaveConfig()
+  UpdateCollectionModsAmount()
+  LoadCollection()
+  $.toast({title: 'Collection cleaned!',
+           content: removedMods + ' mods were removed from collection ' + selectedCollection + '.',
+           type: 'success', delay: 5000, container: $('#toaster')})
 })
 
 $('#delete-collection').on('click', function(e){
   if(selectedCollection.length == 0) return
+
+  var oldName = selectedCollection
 
   $('#collection-name').val('')
   delete collectionConfig['Collections'][selectedCollection]
   selectedCollection = ''
   SaveConfig()
   UpdateCollectionsList()
+  $.toast({title: 'Collection deleted!',
+           content: 'Succesfully deleted ' + oldName + ' collection.',
+           type: 'success', delay: 5000, container: $('#toaster')})
 })
 
 $('#collection-name').change(function(){
@@ -205,8 +313,10 @@ $('#current-collection').on('uncheck-all.bs.table', function(e, rowsAfter, rowsB
   for(r in rowsBefore) {
     for(i in collectionConfig['Collections'][selectedCollection])
     {
-      if(collectionConfig['Collections'][selectedCollection][i] == rowsBefore[r]['itemId'])
+      if(collectionConfig['Collections'][selectedCollection][i] == rowsBefore[r]['itemId']){
         collectionConfig['Collections'][selectedCollection].splice(i, 1)
+        break
+      }
     }
   }
 
@@ -233,7 +343,11 @@ function UpdateModsAmount()
 
 function UpdateCollectionModsAmount()
 {
-  $('#mods-collection-amount').html('Mods in this collection: ' + collectionModsAmount + '\\' + totalModsAmount)
+  var i = collectionConfig['Collections'][selectedCollection].length
+  if(collectionModsAmount != i)
+    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount}(${i})\\${totalModsAmount}`)
+  else
+    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount}\\${totalModsAmount}`)
 }
 
 function LoadWorkshop(){
@@ -345,7 +459,7 @@ function GetCollectionFromLink(){
 	  UpdateCollectionsList()
     $.toast({title: 'Collection imported',
              content: 'New collection ' + name + ' was succesfully imported with ' + count + ' mods.',
-             type: 'info', delay: 5000, container: $('#toaster')})
+             type: 'success', delay: 5000, container: $('#toaster')})
     }else if(this.readyState == 4){
       $.toast({title: 'Connection error',
              content: 'Could not connect to steam servers. Response code ' + this.status,
