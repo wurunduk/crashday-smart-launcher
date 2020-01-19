@@ -1,4 +1,4 @@
-const thisVersion = "v1.5.0"
+const thisVersion = "v1.6.0"
 
 $.getJSON('https://api.github.com/repos/wurunduk/crashday-smart-launcher/tags').done(function(json) {
   var release = json[0]

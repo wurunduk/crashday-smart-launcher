@@ -383,7 +383,7 @@ function LoadWorkshop(){
       table['clickToSelect'] = true
       table['maintainMetaData'] = true
       table['classes'] = 'table table-hover'
-      table['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
+      table['columns'] = [{checkbox: 'enabled', field: 'enabled', order: 'desc', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
       table['rowStyle'] = rowStyle
 
       $('.loading').children().hide()
@@ -498,7 +498,9 @@ function UpdateModlistData()
 function LoadCollections()
 {
   const currentCollectionTable = {}
-  currentCollectionTable['columns'] = [{checkbox: 'enabled', field: 'enabled', sortable:true}, {field: 'title', title: 'Name', sortable:true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable:true}]
+  currentCollectionTable['columns'] = [{checkbox: 'enabled', field: 'enabled', order: 'desc', sortable:true}, {field: 'title', title: 'Name', sortable:true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable:true}]
+  currentCollectionTable['sortName'] = 'enabled'
+  currentCollectionTable['sortOrder'] = 'desc'
   currentCollectionTable['search'] = true
   currentCollectionTable['clickToSelect'] = true
   currentCollectionTable['maintainMetaData'] = true
