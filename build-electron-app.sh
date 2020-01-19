@@ -1,1 +1,0 @@
-electron-packager . --icon=icon.ico

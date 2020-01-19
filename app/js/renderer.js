@@ -1,7 +1,7 @@
 // This file is required by the index.html file and will
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
-const { shell } = require('electron')
+const { ipcRenderer, shell } = require('electron')
 const remote = require('electron').remote
 const app = remote.app
 const path = require('path')
@@ -19,6 +19,12 @@ var collectionConfig = cfg[1]
 SaveConfig()
 var steamAnswer = ''
 var missingMods = []
+
+ipcRenderer.send('app_version')
+ipcRenderer.on('app_version', (event, arg) => {
+  ipcRenderer.removeAllListeners('app_version')
+  $('#version').html('Version ' + arg.version)
+})
 
 $('#mods-testing').prop('checked', launcherConfig['ModTesting'])
 $('#mods-disabled').prop('checked', launcherConfig['DisableMods'])

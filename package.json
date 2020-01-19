@@ -1,17 +1,39 @@
 {
-  "name": "crashday-smart-launcher",
-  "version": "1.5.0",
-  "description": "a better launcher for Crashday:Redline edition",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron ."
+  "build": {
+    "appId": "com.github.wurunduk.crashday-smart-launcher",
+    "productName": "Crashday smart launcher",
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "publish": ["github"]
+    },
+    "publish":[{
+      "provider": "github",
+      "owner": "wurunduk",
+      "repo": "crashday-smart-launcher"
+    }]
   },
+  "name": "crashday-smart-launcher",
+  "version": "1.6.0",
+  "description": "A better launcher for Crashday:Redline edition",
   "author": "Wurunduk",
   "license": "MIT",
+  "main": "main.js",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/wurunduk/crashday-smart-launcher.git"
+  },
+  "scripts": {
+    "build": "electron-builder build --win --publish never",
+    "deploy": "electron-builder build --win --publish always"
+  },
   "devDependencies": {
-    "electron": "^3.0.5"
+    "electron": "^3.0.5",
+    "electron-builder": "^22.2.0"
   },
   "dependencies": {
-    "electron-packager": "^13.1.1"
+    "electron-updater": "^4.2.0"
   }
 }
+

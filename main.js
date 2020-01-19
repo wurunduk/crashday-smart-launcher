@@ -1,5 +1,6 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, ipcMain } = require('electron')
+const {autoUpdater} = require('electron-updater')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -7,15 +8,15 @@ let mainWindow = null
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1280, height: 720, icon: __dirname + '/icon.ico'})
-
-  mainWindow.maximize()
+  mainWindow = new BrowserWindow({width: 1280, height: 720, webPreferences: {
+      nodeIntegration: true,
+    }, icon: __dirname + '/build/icon.ico'})
 
   // and load the index.html of the app.
   mainWindow.loadFile('app/index.html')
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.maximize()
+  autoUpdater.checkForUpdatesAndNotify()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -62,5 +63,14 @@ app.on('activate', function () {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+ipcMain.on('app_version', (event) => {
+  event.sender.send('app_version', { version: app.getVersion() })
+})
+
+autoUpdater.on('update-available', () => {
+  mainWindow.webContents.send('update_available')
+})
+
+autoUpdater.on('update-downloaded', () => {
+  mainWindow.webContents.send('update_downloaded')
+})
