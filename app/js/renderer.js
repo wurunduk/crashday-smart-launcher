@@ -6,6 +6,12 @@ const remote = require('electron').remote
 const app = remote.app
 const path = require('path')
 const fs = require('fs')
+const Mousetrap = require('mousetrap')
+
+Mousetrap.bind(['command+r', 'ctrl+r', 'f5'], () => {
+	remote.getCurrentWindow().reload()
+	return false // prevents default behavior and stops event from bubbling
+})
 
 var activeModsAmount = 0
 var collectionModsAmount = 0

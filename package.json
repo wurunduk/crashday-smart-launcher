@@ -6,13 +6,17 @@
       "category": "public.app-category.utilities"
     },
     "win": {
-      "publish": ["github"]
+      "publish": [
+        "github"
+      ]
     },
-    "publish":[{
-      "provider": "github",
-      "owner": "wurunduk",
-      "repo": "crashday-smart-launcher"
-    }]
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "wurunduk",
+        "repo": "crashday-smart-launcher"
+      }
+    ]
   },
   "name": "crashday-smart-launcher",
   "version": "1.6.1",
@@ -21,8 +25,8 @@
   "license": "MIT",
   "main": "main.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/wurunduk/crashday-smart-launcher.git"
+    "type": "git",
+    "url": "https://github.com/wurunduk/crashday-smart-launcher.git"
   },
   "scripts": {
     "build": "electron-builder build --win --publish never",
@@ -33,7 +37,7 @@
     "electron-builder": "^22.2.0"
   },
   "dependencies": {
-    "electron-updater": "^4.2.0"
+    "electron-updater": "^4.2.0",
+    "mousetrap": "^1.6.5"
   }
 }
-
