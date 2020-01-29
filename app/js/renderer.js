@@ -153,9 +153,9 @@ $('#activate-collection').on('click', function(e){
   if(notFoundMods > 0){
     console.log(missingMods)
     $.toast({title: 'Mods missing!',
-           content: notFoundMods + ` of the mods which are in this collection are missing on the local machine! 
+           content: notFoundMods + ` of the mods which are in this collection are missing on the local machine!
            You need to subscribe to them in steam.<br/>
-           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#MissingModsModal">
+           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#missing-mods-modal">
             Show list
            </button>`,
            type: 'warning', delay: -1, pause_on_hover:true, container: $('#toaster')})
@@ -164,7 +164,7 @@ $('#activate-collection').on('click', function(e){
 })
 
 function PrepareMissingModsModal(){
-  $('#MissingModaLoading').children().show()
+  $('#missing-mods-modal-loader').children().show()
   var jsonParameter = {}
   jsonParameter['publishedfileids'] = []
   for(i in missingMods){
@@ -192,22 +192,22 @@ function PrepareMissingModsModal(){
     if(this.readyState==4 && this.status==200){
       var answer = JSON.parse(Http.responseText)['response']
 
-      $('#MissingModsList').html('')
+      $('#missing-mods-modal-list').html('')
       for(i in answer['publishedfiledetails']){
-        $('#MissingModsList').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + answer['publishedfiledetails'][i]['title'] + '</a><br/>')
+        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + answer['publishedfiledetails'][i]['title'] + '</a><br/>')
       }
-      
+
     }else if(this.readyState == 4){
-      $('#MissingModsList').html('')
+      $('#missing-mods-modal-list').html('')
       for(i in answer['publishedfiledetails']){
-        $('#MissingModsList').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + missingMods[i] + '</a><br/>')
+        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + missingMods[i] + '</a><br/>')
       }
 
       $.toast({title: 'Connection error',
              content: 'Could not connect to steam servers. Response code ' + this.status,
              type: 'error', delay: 5000, container: $('#toaster')})
     }
-    $('#MissingModaLoading').children().hide()
+    $('#missing-mods-modal-loader').children().hide()
   }
 }
 

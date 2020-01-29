@@ -11,14 +11,15 @@
   </head>
   <body>
     <nav class="navbar sticky-top navbar-expand-md navbar-dark bg-dark">
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-          <li id="defaultTab" class="nav-item active tablinks"><a class="nav-link" id="tabMods">Mods</a></li>
-          <li class="nav-item tablinks"><a class="nav-link" id="tabCollections">Collections</a></li>
-          
+      <div class="collapse navbar-collapse" id="navigation">
+        <ul class="nav nav-pills">
+          <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#mods">Mods list</a></li>
+          <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#collections">Collections</a></li>
+          <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tools">Tools</a></li>
+          <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#mod-editor">Mod editor</a></li>
         </ul>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item "><a class="nav-link" id="crashdaycenter-link" target="_blank" href="https://crashdaycenter.com/">crashdaycenter.com</a></li>
@@ -31,11 +32,11 @@
 
     <button type="button" class="btn btn-secondary go-top btn-lg">Back to top</button>
 
-    <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog" aria-labelledby="settings-modal-title" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+            <h5 class="modal-title" id="settings-modal-title">Settings</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -45,28 +46,28 @@
             <label for="cd-file-path">Crashday installation folder path</label>
             <div class="input-group mb-3">
               <input type="text" class="form-control" id="cd-file-path" aria-describedby="basic-addon3">
-            </div>          
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="modal fade" id="MissingModsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal fade" id="missing-mods-modal" tabindex="-1" role="dialog" aria-labelledby="missing-mods-modal-title" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLongTitle">Mods missing from this collection</h5>
+            <h5 class="modal-title" id="missing-mods-modal-title">Mods missing from this collection</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <div id="MissingModsLoading" class="loading d-flex justify-content-center">
+            <div id="missing-mods-modal-loader" class="loading d-flex justify-content-center">
                <div class="spinner-border" role="status">
                  <span class="sr-only">Loading...</span>
                </div>
             </div>
-            <p id="MissingModsList">mods missing list</p>
+            <p id="missing-mods-modal-list">mods missing list</p>
           </div>
           <div class="modal-footer">
             <button type="button" id="remove-missing-mods" class="btn btn-danger" data-dismiss="modal">Remove missing mods from collection</button>
@@ -76,103 +77,20 @@
       </div>
     </div>
 
-    <div id="mods" class="container-fluid mr-5 tabcontent">
-      <div class="row">
-        <div class="col-2 mt-5">
-          <div class="card mt-2 p-1">
-            <a class="btn btn-primary btn-block text-white" id="play">Play</a>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="" id="use-default-launcher">
-              <label class="form-check-label" for="use-default-launcher">
-                Use default launcher
-              </label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="" id="mods-testing">
-              <label class="form-check-label" for="mods-testing">
-                Mod testing mode
-              </label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" autocomplete="off" id="mods-disabled">
-              <label class="form-check-label" for="mods-disabled">
-                Disable mods
-              </label>
-            </div>
-            <label class='text-center mods-amount'>Mods enabled: 0\0</label>
-          </div>
-        </div>
-
-        <div class="col-10 pr-5">
-         <div class="d-flex loading justify-content-center">
-            <div class="spinner-border" role="status">
-              <span class="sr-only">Loading...</span>
-            </div>
-          </div>
-          <table id="mods-table"></table>
-        </div>
-      </div>
+    <div class="tab-content container-fluid mr-5">
+      <div id="mods" class="tab-pane fade show active"></div>
+      <div id="collections" class="tab-pane fade"></div>
+      <div id="tools" class="tab-pane fade"></div>
+      <div id="mod-editor" class="tab-pane fade"></div>
     </div>
-
-    <div id="collections" class="container-fluid mr-5 tabcontent invisible">
-      <div class="row">
-          <div class="col-2 mt-5">
-            <div class="card mt-2 p-1">
-              <a class="btn btn-primary btn-block text-white" id="deactivate-mods">Turn off all mods</a>
-              <label class='text-center mods-amount'>Mods enabled: 0\0</label>
-            </div>
-            <div class="card mt-2 p-1">
-              <a class="btn btn-primary btn-block text-white" id="activate-collection">Activate collection</a>
-              <a class="btn btn-primary btn-block text-white" id="new-collection">New collection</a>
-              <a class="btn btn-danger btn-block text-white" id="delete-collection">Delete collection</a>
-              <input class="form-control mt-2" type="text" id="collection-name" placeholder="Collection name">
-              <label class="text-center" id='mods-collection-amount'>Mods in this collection: 0\0</label>
-            </div>
-            <div class="card mt-2 p-1">
-              <div class="input-group mb-3">
-                <input class="form-control" type="text" id="steam-collection-link" placeholder="Steam collection link" aria-label="Steam collection link">
-                <div class="input-group-append">
-                  <button class="btn btn-outline-secondary" type="button" id="get-steam-collection">Import</button>
-                </div>
-              </div>
-              <small id="steam-collection-import-help" class="form-text text-muted">Paste a steam collection id or a link to enable all the mods from the collection which are available locally.</small>
-            </div>
-            <div class="card mt-2 p-1">
-              <div class="font-weight-bold">Collections:</div>
-              <table id="collections-list" class="mt-2"></table>
-            </div>
-          </div>
-          <div class="col-10 pr-5">
-            <div class="loading d-flex justify-content-center">
-               <div class="spinner-border" role="status">
-                 <span class="sr-only">Loading...</span>
-               </div>
-            </div>
-            <table id="current-collection"></table>
-          </div>
-      </div>
-    </div>
-
-
-    <div id="tools" class="container-fluid mr-5 tabcontent invisible">
-      <div class="row">
-          <div class="col-2 mt-5">
-            <div class="card mt-2 p-1">
-              <label class='text-center' id=''>test</label>
-            </div>
-          </div>
-          <div class="col-10 pr-5">
-          </div>
-      </div>
-    </div>
-
 
     <script>window.$ = window.jQuery = require('./lib/js/jquery-3.4.1.min.js');</script>
     <script src="./lib/js/bootstrap.min.js"></script>
     <script src="./lib/js/toast.min.js"></script>
     <script src="./lib/js/bootstrap-table.min.js"></script>
+
+    <script src="./js/load-pages.js"></script>
     <script src="./js/go-to-top.js"></script>
-    <script src="./js/tabs.js"></script>
     <script src="./js/check-update.js"></script>
     <script>
       require('./js/renderer.js')
