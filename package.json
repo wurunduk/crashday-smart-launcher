@@ -33,7 +33,7 @@
     "deploy": "electron-builder build --win --publish always"
   },
   "devDependencies": {
-    "electron": "^3.0.5",
+    "electron": "^7.2.4",
     "electron-builder": "^22.2.0"
   },
   "dependencies": {
