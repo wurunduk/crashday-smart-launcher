@@ -33,11 +33,11 @@
     "deploy": "electron-builder build --win --publish always"
   },
   "devDependencies": {
-    "electron": "^3.0.5",
-    "electron-builder": "^22.2.0"
+    "electron": "^9.2.1",
+    "electron-builder": "^22.8.0"
   },
   "dependencies": {
-    "electron-updater": "^4.2.0",
+    "electron-updater": "^4.3.1",
     "mousetrap": "^1.6.5"
   }
 }
