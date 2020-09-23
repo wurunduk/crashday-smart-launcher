@@ -5,8 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 ### Added
+- Added Item previews
 - 'f5' or 'ctrl+r' will reload the launcher now.
 ### Changed
+- Formatted amount of mods text.
 ### Fixed
 - Fixed broken config creation if a mod with non numbered .cpk was present in mods folder (thanks Mica).
 

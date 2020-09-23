@@ -187,7 +187,7 @@ function PrepareMissingModsModal(){
   jsonParameter['includemetadata'] = false
   jsonParameter['return_playtime_stats'] = false
   jsonParameter['appid'] = 508980
-  jsonParameter['strip_description_bbcode'] = true
+  jsonParameter['strip_description_bbcode'] = false
 
   const Http = new XMLHttpRequest()
   const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
@@ -350,16 +350,16 @@ function UpdateModSelection(rows, row, newState)
 
 function UpdateModsAmount()
 {
-  $('.mods-amount').html('Mods enabled: ' + activeModsAmount + '\\' + totalModsAmount)
+  $('.mods-amount').html(activeModsAmount + ' out of ' + totalModsAmount + ' mods enabled')
 }
 
 function UpdateCollectionModsAmount()
 {
   var i = collectionConfig['Collections'][selectedCollection].length
   if(collectionModsAmount != i)
-    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount}(${i})\\${totalModsAmount}`)
+    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount}(${i}) out of ${totalModsAmount}`)
   else
-    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount}\\${totalModsAmount}`)
+    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount} out of ${totalModsAmount}`)
 }
 
 function LoadWorkshop(){
@@ -379,7 +379,7 @@ function LoadWorkshop(){
   jsonParameter['includemetadata'] = false
   jsonParameter['return_playtime_stats'] = false
   jsonParameter['appid'] = 508980
-  jsonParameter['strip_description_bbcode'] = true
+  jsonParameter['strip_description_bbcode'] = false
 
   const Http = new XMLHttpRequest()
   const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
@@ -423,14 +423,26 @@ function detailFormatter(index, row) {
     if(steamAnswer['publishedfiledetails'][i]['publishedfileid'] == row['itemId']){
       data = fs.readFileSync('app/html/mod-description.html', 'utf8')
       data = $.parseHTML(data)
-      $('.mod-image', data).attr('src', steamAnswer['publishedfiledetails'][i]['preview_url'])
+      $('.mod-preview-image', data).attr('src', steamAnswer['publishedfiledetails'][i]['preview_url'])
       $('.mod-desc', data).html(steamAnswer['publishedfiledetails'][i]['file_description'])
+      $('.mod-views', data).html(steamAnswer['publishedfiledetails'][i]['views'])
+      $('.mod-subs', data).html(steamAnswer['publishedfiledetails'][i]['subscriptions'])
+      $('.mod-favs', data).html(steamAnswer['publishedfiledetails'][i]['favorited'])
+      $('.mod-size', data).html(humanFileSize(steamAnswer['publishedfiledetails'][i]['file_size']))
+
+      $('.mod-open-browser', data).attr("href", "https://steamcommunity.com/sharedfiles/filedetails/?id=" + steamAnswer['publishedfiledetails'][i]['publishedfileid'])
+      $('.mod-open-steam', data).attr("href", "steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=" + steamAnswer['publishedfiledetails'][i]['publishedfileid'])
       html = data
       break
     }
   }
   return html
 }
+
+function humanFileSize(size) {
+  var i = size == 0 ? 0 : Math.floor( Math.log(size) / Math.log(1024) );
+  return ( size / Math.pow(1024, i) ).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
+};
 
 function GetCollectionFromLink(){
   var jsonParameter = {}
@@ -453,7 +465,7 @@ function GetCollectionFromLink(){
   jsonParameter['includemetadata'] = false
   jsonParameter['return_playtime_stats'] = false
   jsonParameter['appid'] = 508980
-  jsonParameter['strip_description_bbcode'] = true
+  jsonParameter['strip_description_bbcode'] = false
 
   const Http = new XMLHttpRequest()
   const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
