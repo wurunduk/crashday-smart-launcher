@@ -394,6 +394,13 @@ function LoadWorkshop(){
       table['search'] = true
       table['clickToSelect'] = true
       table['maintainMetaData'] = true
+      table['detailView'] = true
+      table['detailViewIcon'] = true
+      table['detailFormatter'] = detailFormatter
+      table['iconsPrefix'] = 'icon'
+      table['icons'] = []
+      table['icons']['detailOpen'] = 'ion-md-information-circle-outline'
+      table['icons']['detailClose'] = 'ion-md-information-circle'
       table['classes'] = 'table table-hover'
       table['columns'] = [{checkbox: 'enabled', field: 'enabled', order: 'desc', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
       table['rowStyle'] = rowStyle
@@ -408,6 +415,21 @@ function LoadWorkshop(){
              type: 'error', delay: 5000, container: $('#toaster')})
     }
   }
+}
+
+function detailFormatter(index, row) {
+  var html = []
+  for(i in steamAnswer['publishedfiledetails']){
+    if(steamAnswer['publishedfiledetails'][i]['publishedfileid'] == row['itemId']){
+      data = fs.readFileSync('app/html/mod-description.html', 'utf8')
+      data = $.parseHTML(data)
+      $('.mod-image', data).attr('src', steamAnswer['publishedfiledetails'][i]['preview_url'])
+      $('.mod-desc', data).html(steamAnswer['publishedfiledetails'][i]['file_description'])
+      html = data
+      break
+    }
+  }
+  return html
 }
 
 function GetCollectionFromLink(){
@@ -649,15 +671,19 @@ function LoadConfig(){
   if(fs.existsSync(p)){
     fs.readdirSync(p).forEach(file => {
       var foundFile = false
+      name = parseInt(file, 10)
+      //skip not numbered .cpk's
+      if(name == NaN) return
+
       for(n in cfg['WorkshopItems'])
       {
-        if(cfg['WorkshopItems'][n][0] == parseInt(file))
+        if(cfg['WorkshopItems'][n][0] == name)
         {
           foundFile = true
         }
       }
       if(!foundFile){
-        cfg['WorkshopItems'].push([parseInt(file), false])
+        cfg['WorkshopItems'].push([name, false])
         foundNewMods += 1
       }
     })

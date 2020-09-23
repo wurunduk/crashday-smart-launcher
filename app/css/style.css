@@ -21,6 +21,12 @@ table tr{
   to {opacity: 1;}
 }
 
+.mod-preview-image{
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+}
+
 .go-top {
     position:fixed;
     bottom:2em;
