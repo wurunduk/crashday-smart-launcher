@@ -5,12 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 ### Added
-- Added Item previews
+- Added Item previews.
+- List of missing from collection mods now has a link to open mod in steam directly.
 - 'f5' or 'ctrl+r' will reload the launcher now.
 ### Changed
 - Formatted amount of mods text.
 ### Fixed
 - Fixed broken config creation if a mod with non numbered .cpk was present in mods folder (thanks Mica).
+- Fixed some new unscanned mods breaking launcher.config.
 
 ## [1.6.1] 2020-01-19
 ### Added
