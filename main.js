@@ -10,7 +10,7 @@ function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 1280, height: 720, webPreferences: {
       nodeIntegration: true,
-    }, icon: __dirname + '/build/icon.ico'})
+    }})
 
   // and load the index.html of the app.
   mainWindow.loadFile('app/index.html')
