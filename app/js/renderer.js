@@ -7,6 +7,7 @@ const app = remote.app
 const path = require('path')
 const fs = require('fs')
 const Mousetrap = require('mousetrap')
+const { windowsStore } = require('process')
 
 Mousetrap.bind(['command+r', 'ctrl+r', 'f5'], () => {
 	remote.getCurrentWindow().reload()
@@ -22,9 +23,9 @@ var selectedCollection = ''
 var cfg = LoadConfig()
 var launcherConfig = cfg[0]
 var collectionConfig = cfg[1]
-SaveConfig()
 var steamAnswer = ''
 var missingMods = []
+SaveConfig()
 
 ipcRenderer.send('app_version')
 ipcRenderer.on('app_version', (event, arg) => {
@@ -88,7 +89,6 @@ $('#mods-table').on('uncheck-all.bs.table', function(e, rowsAfter, rowsBefore){
   SaveConfig()
 })
 
-
 //
 //Left menu of mods list
 //
@@ -108,10 +108,173 @@ $('#play').on('click', function(){
   else shell.openExternal('steam://run/508980//-skiplauncher/')
 })
 
+function PrepareMissingModsModal(){
+  $('#missing-mods-modal-loader').children().show()
+  var jsonParameter = {}
+  jsonParameter['publishedfileids'] = []
+  for(i in missingMods){
+    jsonParameter['publishedfileids'].push(missingMods[i])
+  }
 
-//
-//Collections
-//
+  jsonParameter['includetags'] = true
+  jsonParameter['includeadditionalpreviews'] = false
+  jsonParameter['includechildren'] = false
+  jsonParameter['includekvtags'] = false
+  jsonParameter['includevotes'] = false
+  jsonParameter['short_description'] = false
+  jsonParameter['includeforsaledata'] = false
+  jsonParameter['includemetadata'] = false
+  jsonParameter['return_playtime_stats'] = false
+  jsonParameter['appid'] = 508980
+  jsonParameter['strip_description_bbcode'] = false
+
+  const Http = new XMLHttpRequest()
+  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
+  Http.open('GET', url)
+  Http.send()
+
+  Http.onreadystatechange=function(){
+    if(this.readyState==4 && this.status==200){
+      var answer = JSON.parse(Http.responseText)['response']
+
+      $('#missing-mods-modal-list').html('')
+      for(i in answer['publishedfiledetails']){
+        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + answer['publishedfiledetails'][i]['title'] + '</a><br/>')
+      }
+
+    }else if(this.readyState == 4){
+      $('#missing-mods-modal-list').html('')
+      for(i in answer['publishedfiledetails']){
+        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + missingMods[i] + '</a><br/>')
+      }
+
+      $.toast({title: 'Connection error',
+             content: 'Could not connect to steam servers. Response code ' + this.status,
+             type: 'error', delay: 5000, container: $('#toaster')})
+    }
+    $('#missing-mods-modal-loader').children().hide()
+  }
+}
+
+function UpdateModsAmount()
+{
+  $('.mods-amount').html(activeModsAmount + ' out of ' + totalModsAmount + ' mods enabled')
+}
+
+function LoadWorkshop(){
+  var jsonParameter = {}
+  jsonParameter['publishedfileids'] = []
+  for(i in launcherConfig['WorkshopItems']){
+    jsonParameter['publishedfileids'].push(launcherConfig['WorkshopItems'][i][0])
+  }
+
+  jsonParameter['includetags'] = true
+  jsonParameter['includeadditionalpreviews'] = false
+  jsonParameter['includechildren'] = false
+  jsonParameter['includekvtags'] = false
+  jsonParameter['includevotes'] = false
+  jsonParameter['short_description'] = false
+  jsonParameter['includeforsaledata'] = false
+  jsonParameter['includemetadata'] = false
+  jsonParameter['return_playtime_stats'] = false
+  jsonParameter['appid'] = 508980
+  jsonParameter['strip_description_bbcode'] = false
+
+  const Http = new XMLHttpRequest()
+  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
+  Http.open('GET', url)
+  Http.send()
+
+  console.log(url)
+
+  Http.onreadystatechange=function(){
+    if(this.readyState==4 && this.status==200){
+      steamAnswer = JSON.parse(Http.responseText)['response']
+
+      const table = {}
+      table['search'] = true
+      table['clickToSelect'] = true
+      table['maintainMetaData'] = true
+      table['detailView'] = true
+      table['detailViewIcon'] = true
+      table['detailFormatter'] = detailFormatter
+      table['iconsPrefix'] = 'icon'
+      table['icons'] = []
+      table['icons']['detailOpen'] = 'ion-md-information-circle-outline'
+      table['icons']['detailClose'] = 'ion-md-information-circle'
+      table['classes'] = 'table table-hover'
+      table['columns'] = [{checkbox: 'enabled', field: 'enabled', order: 'desc', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
+      table['rowStyle'] = rowStyle
+
+      $('.loading').children().hide()
+      $('#mods-table').bootstrapTable(table)
+
+      UpdateModlistData()
+    }else if(this.readyState == 4){
+      $.toast({title: 'Connection error',
+             content: 'Could not connect to steam servers. Response code ' + this.status,
+             type: 'error', delay: 5000, container: $('#toaster')})
+    }
+  }
+}
+
+function UpdateModlistData()
+{
+  totalModsAmount = 0
+  activeModsAmount = 0
+
+  $('.loading').children().show()
+  var data = []
+  for(i in steamAnswer['publishedfiledetails']){
+    data[i] = {}
+    data[i]['id'] = i
+    data[i]['enabled'] = launcherConfig['WorkshopItems'][i][1]
+    if(data[i]['enabled']) activeModsAmount += 1
+    data[i]['itemId'] = launcherConfig['WorkshopItems'][i][0]
+    data[i]['title'] = steamAnswer['publishedfiledetails'][i]['title']
+    data[i]['tags'] = ''
+    for(n in steamAnswer['publishedfiledetails'][i]['tags']){
+      if(n>0) data[i]['tags'] += ', '
+
+      data[i]['tags'] += steamAnswer['publishedfiledetails'][i]['tags'][n]['tag']
+    }
+    totalModsAmount += 1
+    UpdateModsAmount()
+  }
+  $('.loading').children().hide()
+  $('#mods-table').bootstrapTable('load', data)
+}
+
+function rowStyle(row, index){
+  var c=0,t=0,a=0,m=0
+  if(row['tags'].includes('Car')) c = 1
+  if(row['tags'].includes('Track')) t = 1
+  if(row['tags'].includes('Ambience')) a = 1
+  if(row['tags'].includes('Misc')) m = 1
+
+  if(c+t+a+m > 1) return{css:{
+    color: 'orange'
+  }}
+
+  if(c) return{css:{
+    color: 'red'
+  }}
+  if(t) return{css:{
+    color: 'green'
+  }}
+  if(a) return{css:{
+    color: 'LightSeaGreen'
+  }}
+  if(m) return{css:{
+    color: 'purple'
+  }}
+
+  return{}
+}
+
+//=============================================================================================
+//COLLECTIONS
+//=============================================================================================
 $('#deactivate-mods').on('click', function(e){
   for(i in launcherConfig['WorkshopItems'])
   {
@@ -169,52 +332,13 @@ $('#activate-collection').on('click', function(e){
   }
 })
 
-function PrepareMissingModsModal(){
-  $('#missing-mods-modal-loader').children().show()
-  var jsonParameter = {}
-  jsonParameter['publishedfileids'] = []
-  for(i in missingMods){
-    jsonParameter['publishedfileids'].push(missingMods[i])
-  }
-
-  jsonParameter['includetags'] = true
-  jsonParameter['includeadditionalpreviews'] = false
-  jsonParameter['includechildren'] = false
-  jsonParameter['includekvtags'] = false
-  jsonParameter['includevotes'] = false
-  jsonParameter['short_description'] = false
-  jsonParameter['includeforsaledata'] = false
-  jsonParameter['includemetadata'] = false
-  jsonParameter['return_playtime_stats'] = false
-  jsonParameter['appid'] = 508980
-  jsonParameter['strip_description_bbcode'] = false
-
-  const Http = new XMLHttpRequest()
-  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
-  Http.open('GET', url)
-  Http.send()
-
-  Http.onreadystatechange=function(){
-    if(this.readyState==4 && this.status==200){
-      var answer = JSON.parse(Http.responseText)['response']
-
-      $('#missing-mods-modal-list').html('')
-      for(i in answer['publishedfiledetails']){
-        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + answer['publishedfiledetails'][i]['title'] + '</a><br/>')
-      }
-
-    }else if(this.readyState == 4){
-      $('#missing-mods-modal-list').html('')
-      for(i in answer['publishedfiledetails']){
-        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + missingMods[i] + '</a><br/>')
-      }
-
-      $.toast({title: 'Connection error',
-             content: 'Could not connect to steam servers. Response code ' + this.status,
-             type: 'error', delay: 5000, container: $('#toaster')})
-    }
-    $('#missing-mods-modal-loader').children().hide()
-  }
+function UpdateCollectionModsAmount()
+{
+  var i = collectionConfig['Collections'][selectedCollection].length
+  if(collectionModsAmount != i)
+    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount}(${i}) out of ${totalModsAmount}`)
+  else
+    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount} out of ${totalModsAmount}`)
 }
 
 $('#new-collection').on('click', function(e){
@@ -337,113 +461,6 @@ $('#current-collection').on('uncheck-all.bs.table', function(e, rowsAfter, rowsB
   SaveConfig()
 })
 
-function UpdateModSelection(rows, row, newState)
-{
-  if(launcherConfig['WorkshopItems'][rows[row]['id']][1] == newState) return
-
-  launcherConfig['WorkshopItems'][rows[row]['id']][1] = newState
-  if(newState) activeModsAmount += 1
-  else activeModsAmount -= 1
-
-  UpdateModsAmount()
-}
-
-function UpdateModsAmount()
-{
-  $('.mods-amount').html(activeModsAmount + ' out of ' + totalModsAmount + ' mods enabled')
-}
-
-function UpdateCollectionModsAmount()
-{
-  var i = collectionConfig['Collections'][selectedCollection].length
-  if(collectionModsAmount != i)
-    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount}(${i}) out of ${totalModsAmount}`)
-  else
-    $('#mods-collection-amount').html(`Mods in this collection: ${collectionModsAmount} out of ${totalModsAmount}`)
-}
-
-function LoadWorkshop(){
-  var jsonParameter = {}
-  jsonParameter['publishedfileids'] = []
-  for(i in launcherConfig['WorkshopItems']){
-    jsonParameter['publishedfileids'].push(launcherConfig['WorkshopItems'][i][0])
-  }
-
-  jsonParameter['includetags'] = true
-  jsonParameter['includeadditionalpreviews'] = false
-  jsonParameter['includechildren'] = false
-  jsonParameter['includekvtags'] = false
-  jsonParameter['includevotes'] = false
-  jsonParameter['short_description'] = false
-  jsonParameter['includeforsaledata'] = false
-  jsonParameter['includemetadata'] = false
-  jsonParameter['return_playtime_stats'] = false
-  jsonParameter['appid'] = 508980
-  jsonParameter['strip_description_bbcode'] = false
-
-  const Http = new XMLHttpRequest()
-  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
-  Http.open('GET', url)
-  Http.send()
-
-  Http.onreadystatechange=function(){
-    if(this.readyState==4 && this.status==200){
-      steamAnswer = JSON.parse(Http.responseText)['response']
-
-      const table = {}
-      table['search'] = true
-      table['clickToSelect'] = true
-      table['maintainMetaData'] = true
-      table['detailView'] = true
-      table['detailViewIcon'] = true
-      table['detailFormatter'] = detailFormatter
-      table['iconsPrefix'] = 'icon'
-      table['icons'] = []
-      table['icons']['detailOpen'] = 'ion-md-information-circle-outline'
-      table['icons']['detailClose'] = 'ion-md-information-circle'
-      table['classes'] = 'table table-hover'
-      table['columns'] = [{checkbox: 'enabled', field: 'enabled', order: 'desc', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
-      table['rowStyle'] = rowStyle
-
-      $('.loading').children().hide()
-      $('#mods-table').bootstrapTable(table)
-
-      UpdateModlistData()
-    }else if(this.readyState == 4){
-      $.toast({title: 'Connection error',
-             content: 'Could not connect to steam servers. Response code ' + this.status,
-             type: 'error', delay: 5000, container: $('#toaster')})
-    }
-  }
-}
-
-function detailFormatter(index, row) {
-  var html = []
-  for(i in steamAnswer['publishedfiledetails']){
-    if(steamAnswer['publishedfiledetails'][i]['publishedfileid'] == row['itemId']){
-      data = fs.readFileSync('app/html/mod-description.html', 'utf8')
-      data = $.parseHTML(data)
-      $('.mod-preview-image', data).attr('src', steamAnswer['publishedfiledetails'][i]['preview_url'])
-      $('.mod-desc', data).html(steamAnswer['publishedfiledetails'][i]['file_description'])
-      $('.mod-views', data).html(steamAnswer['publishedfiledetails'][i]['views'])
-      $('.mod-subs', data).html(steamAnswer['publishedfiledetails'][i]['subscriptions'])
-      $('.mod-favs', data).html(steamAnswer['publishedfiledetails'][i]['favorited'])
-      $('.mod-size', data).html(humanFileSize(steamAnswer['publishedfiledetails'][i]['file_size']))
-
-      $('.mod-open-browser', data).attr("href", "https://steamcommunity.com/sharedfiles/filedetails/?id=" + steamAnswer['publishedfiledetails'][i]['publishedfileid'])
-      $('.mod-open-steam', data).attr("href", "steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=" + steamAnswer['publishedfiledetails'][i]['publishedfileid'])
-      html = data
-      break
-    }
-  }
-  return html
-}
-
-function humanFileSize(size) {
-  var i = size == 0 ? 0 : Math.floor( Math.log(size) / Math.log(1024) );
-  return ( size / Math.pow(1024, i) ).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
-};
-
 function GetCollectionFromLink(){
   var jsonParameter = {}
   var collectionUrl
@@ -514,33 +531,6 @@ function GetCollectionFromLink(){
   }
 }
 
-function UpdateModlistData()
-{
-  totalModsAmount = 0
-  activeModsAmount = 0
-
-  $('.loading').children().show()
-  var data = []
-  for(i in steamAnswer['publishedfiledetails']){
-    data[i] = {}
-    data[i]['id'] = i
-    data[i]['enabled'] = launcherConfig['WorkshopItems'][i][1]
-    if(data[i]['enabled']) activeModsAmount += 1
-    data[i]['itemId'] = launcherConfig['WorkshopItems'][i][0]
-    data[i]['title'] = steamAnswer['publishedfiledetails'][i]['title']
-    data[i]['tags'] = ''
-    for(n in steamAnswer['publishedfiledetails'][i]['tags']){
-      if(n>0) data[i]['tags'] += ', '
-
-      data[i]['tags'] += steamAnswer['publishedfiledetails'][i]['tags'][n]['tag']
-    }
-    totalModsAmount += 1
-    UpdateModsAmount()
-  }
-  $('.loading').children().hide()
-  $('#mods-table').bootstrapTable('load', data)
-}
-
 function LoadCollections()
 {
   const currentCollectionTable = {}
@@ -563,6 +553,7 @@ function LoadCollections()
   UpdateCollectionsList()
 }
 
+//formatting for collections list table
 function cellStyle(value, row, index, field){
   return {css:{
     display:'none'
@@ -614,32 +605,125 @@ function UpdateCollectionsList()
   $('#collections-list').bootstrapTable('load', data)
 }
 
-function rowStyle(row, index){
-  var c=0,t=0,a=0,m=0
-  if(row['tags'].includes('Car')) c = 1
-  if(row['tags'].includes('Track')) t = 1
-  if(row['tags'].includes('Ambience')) a = 1
-  if(row['tags'].includes('Misc')) m = 1
+//=============================================================================================
+//MOD PREVIEW
+//=============================================================================================
+function modMoveUp(evt){
+  //update steamAnswer,
+  //update launcherConfig
+  //update table view
+  steamid = $(this).attr('data-steamid')
+  for(i in launcherConfig['WorkshopItems']){
+    if(launcherConfig['WorkshopItems'][i][0] == steamid){
+      //cant move the item up if its the first one
+      if(i == 0) return
 
-  if(c+t+a+m > 1) return{css:{
-    color: 'orange'
-  }}
+      //swap items it steamAnswer
+      tmpSAItem = steamAnswer['publishedfiledetails'][i]
+      steamAnswer['publishedfiledetails'][i] = steamAnswer['publishedfiledetails'][i-1]
+      steamAnswer['publishedfiledetails'][i-1] = tmpSAItem
 
-  if(c) return{css:{
-    color: 'red'
-  }}
-  if(t) return{css:{
-    color: 'green'
-  }}
-  if(a) return{css:{
-    color: 'LightSeaGreen'
-  }}
-  if(m) return{css:{
-    color: 'purple'
-  }}
+      //swap items in launcherConfig
+      tmpLCItem = launcherConfig['WorkshopItems'][i]
+      launcherConfig['WorkshopItems'][i] = launcherConfig['WorkshopItems'][i-1]
+      launcherConfig['WorkshopItems'][i-1] = tmpLCItem
 
-  return{}
+      $table = $('#mods-table')
+
+      var tableRow = JSON.parse(JSON.stringify($table.bootstrapTable('getData', {"unfiltered": true} )[i]))
+      var tableRowPrev = JSON.parse(JSON.stringify($table.bootstrapTable('getData', {"unfiltered": true})[i-1]))
+      tableRow['id'] = (i-1).toString()
+      tableRowPrev['id'] = i
+      $table.bootstrapTable('updateRow', {index: i, row: tableRowPrev})
+      $table.bootstrapTable('updateRow', {index: i-1, row: tableRow})
+      $table.bootstrapTable('toggleDetailView', i-1)
+      var offset = $('.mod-move-down').offset()
+      var height = $('.mod-move-down').height()
+      y = evt.pageY - (offset.top + height/2)
+      console.log(y)
+      window.scrollBy(0, -y)
+      SaveConfig()
+      return
+    }
+  }
 }
+
+function modMoveDown(evt){
+  //update steamAnswer,
+  //update launcherConfig
+  //update table view
+  steamid = $(this).attr('data-steamid')
+  for(i in launcherConfig['WorkshopItems']){
+    if(launcherConfig['WorkshopItems'][i][0] == steamid){
+      //cant move the item down if its the last one
+      if(i == launcherConfig['WorkshopItems'].length - 1) return
+
+      //swap items it steamAnswer
+      tmpSAItem = steamAnswer['publishedfiledetails'][parseInt(i)+1]
+      steamAnswer['publishedfiledetails'][parseInt(i)+1] = steamAnswer['publishedfiledetails'][i]
+      steamAnswer['publishedfiledetails'][i] = tmpSAItem
+
+      //swap items in launcherConfig
+      tmpLCItem = launcherConfig['WorkshopItems'][parseInt(i)+1]
+      launcherConfig['WorkshopItems'][parseInt(i)+1] = launcherConfig['WorkshopItems'][i]
+      launcherConfig['WorkshopItems'][i] = tmpLCItem
+
+      $table = $('#mods-table')
+
+      var tableRow = JSON.parse(JSON.stringify($table.bootstrapTable('getData', {"unfiltered": true})[i]))
+      var tableRowPrev = JSON.parse(JSON.stringify($table.bootstrapTable('getData', {"unfiltered": true})[parseInt(i)+1]))
+      tableRow['id'] = (parseInt(i)+1).toString()
+      tableRowPrev['id'] = i
+      $table.bootstrapTable('updateRow', {index: i, row: tableRowPrev})
+      $table.bootstrapTable('updateRow', {index: parseInt(i)+1, row: tableRow})
+      $table.bootstrapTable('toggleDetailView', parseInt(i)+1)
+      var offset = $('.mod-move-down').offset()
+      var height = $('.mod-move-down').height()
+      y = evt.pageY - (offset.top + height/2)
+      console.log(y)
+      window.scrollBy(0, -y)
+      SaveConfig()
+      return
+    }
+  }
+}
+
+
+function detailFormatter(index, row) {
+  var html = []
+  for(i in steamAnswer['publishedfiledetails']){
+    if(steamAnswer['publishedfiledetails'][i]['publishedfileid'] == row['itemId']){
+      data = fs.readFileSync('app/html/mod-description.html', 'utf8')
+      data = $.parseHTML(data)
+      $('.mod-preview-image', data).attr('src', steamAnswer['publishedfiledetails'][i]['preview_url'])
+      $('.mod-desc', data).html(steamAnswer['publishedfiledetails'][i]['file_description'])
+      $('.mod-views', data).html(steamAnswer['publishedfiledetails'][i]['views'])
+      $('.mod-subs', data).html(steamAnswer['publishedfiledetails'][i]['subscriptions'])
+      $('.mod-favs', data).html(steamAnswer['publishedfiledetails'][i]['favorited'])
+      $('.mod-size', data).html(humanFileSize(steamAnswer['publishedfiledetails'][i]['file_size']))
+
+      $('.mod-open-browser', data).attr("href", "https://steamcommunity.com/sharedfiles/filedetails/?id=" + steamAnswer['publishedfiledetails'][i]['publishedfileid'])
+      $('.mod-open-steam', data).attr("href", "steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=" + steamAnswer['publishedfiledetails'][i]['publishedfileid'])
+
+      $('.mod-move-up', data).attr("data-steamid", steamAnswer['publishedfiledetails'][i]['publishedfileid'])
+      $('.mod-move-up', data).click(modMoveUp)
+      $('.mod-move-down', data).attr("data-steamid", steamAnswer['publishedfiledetails'][i]['publishedfileid'])
+      $('.mod-move-down', data).click(modMoveDown)
+      html = data
+      break
+    }
+  }
+  return html
+}
+
+function humanFileSize(size) {
+  var i = size == 0 ? 0 : Math.floor( Math.log(size) / Math.log(1024) );
+  return ( size / Math.pow(1024, i) ).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
+};
+
+//=============================================================================================
+//CONFIG LOADING-SAVING
+//=============================================================================================
 
 function LoadConfig(){
   var cfg = fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config'))
