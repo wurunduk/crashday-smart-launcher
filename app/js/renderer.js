@@ -697,7 +697,7 @@ function detailFormatter(index, row) {
   var html = []
   for(i in steamAnswer['publishedfiledetails']){
     if(steamAnswer['publishedfiledetails'][i]['publishedfileid'] == row['itemId']){
-      data = fs.readFileSync('app/html/mod-description.html', 'utf8')
+      data = fs.readFileSync(path.join(__dirname, '../html/mod-description.html'), 'utf8')
       data = $.parseHTML(data)
       $('.mod-preview-image', data).attr('src', steamAnswer['publishedfiledetails'][i]['preview_url'])
       $('.mod-desc', data).html(steamAnswer['publishedfiledetails'][i]['file_description'])

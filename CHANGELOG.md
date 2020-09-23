@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.7.1, 1.7.2] 2020-09-23
+Fixed build errors?
+
 ## [1.7.0] 2020-09-23
 ### Added
 - Added item previews.
