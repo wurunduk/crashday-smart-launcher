@@ -139,13 +139,17 @@ function PrepareMissingModsModal(){
 
       $('#missing-mods-modal-list').html('')
       for(i in answer['publishedfiledetails']){
-        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + answer['publishedfiledetails'][i]['title'] + '</a><br/>')
+        $('#missing-mods-modal-list').append(
+          `<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${parseInt(missingMods[i])}">${answer['publishedfiledetails'][i]['title']}</a>
+           <a href="steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=${parseInt(missingMods[i])}">(open in steam)</a></br>`)
       }
 
     }else if(this.readyState == 4){
       $('#missing-mods-modal-list').html('')
       for(i in answer['publishedfiledetails']){
-        $('#missing-mods-modal-list').append('<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=' + parseInt(missingMods[i]) + '" >' + missingMods[i] + '</a><br/>')
+        $('#missing-mods-modal-list').append(
+        `<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${parseInt(missingMods[i])}">${answer['publishedfiledetails'][i]['title']}</a>
+        <a href="steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=${parseInt(missingMods[i])}">(open in steam)</a></br>`)
       }
 
       $.toast({title: 'Connection error',
@@ -767,7 +771,7 @@ function LoadConfig(){
   if(fs.existsSync(p)){
     fs.readdirSync(p).forEach(file => {
       var foundFile = false
-      name = parseInt(file, 10)
+      var name = parseInt(file, 10)
       //skip not numbered .cpk's
       if(name == NaN) return
 
