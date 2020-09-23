@@ -5,7 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 ### Added
-- Added Item previews.
+### Changed
+### Fixed
+
+## [1.7.0] 2020-09-23
+### Added
+- Added item previews.
+- Added item reordering.
 - List of missing from collection mods now has a link to open mod in steam directly.
 - 'f5' or 'ctrl+r' will reload the launcher now.
 ### Changed
