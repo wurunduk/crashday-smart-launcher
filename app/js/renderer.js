@@ -53,6 +53,9 @@ $('#cd-file-path').on('change', function() {
   else collectionConfig['CrashdayPath'] = p
 
   SaveConfig()
+
+  $.toast({title: 'CD Path saved!',
+           type: 'success', delay: 5000, container: $('#toaster')})
 })
 
 LoadWorkshop()
@@ -133,9 +136,17 @@ function PrepareMissingModsModal(){
   Http.open('GET', url)
   Http.send()
 
+  console.groupCollapsed('Sent a request to Steam')
+  console.log(url)
+  console.groupEnd()
+
   Http.onreadystatechange=function(){
     if(this.readyState==4 && this.status==200){
       var answer = JSON.parse(Http.responseText)['response']
+
+      console.groupCollapsed('Steam answer')
+      console.log(answer)
+      console.groupEnd()
 
       $('#missing-mods-modal-list').html('')
       for(i in answer['publishedfiledetails']){
@@ -189,11 +200,17 @@ function LoadWorkshop(){
   Http.open('GET', url)
   Http.send()
 
+  console.groupCollapsed('Sent a request to Steam')
   console.log(url)
+  console.groupEnd()
 
   Http.onreadystatechange=function(){
     if(this.readyState==4 && this.status==200){
       steamAnswer = JSON.parse(Http.responseText)['response']
+
+      console.groupCollapsed('Steam answer')
+      console.log(steamAnswer)
+      console.groupEnd()
 
       const table = {}
       table['search'] = true
@@ -493,9 +510,17 @@ function GetCollectionFromLink(){
   Http.open('GET', url)
   Http.send()
 
+  console.groupCollapsed('Sent a request to Steam')
+  console.log(url)
+  console.groupEnd()
+
   Http.onreadystatechange=function(){
     if(this.readyState==4 && this.status==200){
       var response = JSON.parse(Http.responseText)['response']
+
+      console.groupCollapsed('Steam answer')
+      console.log(response)
+      console.groupEnd()
 
       if(response['publishedfiledetails'][0]['result'] != 1){
       	$.toast({title: 'Collection import error',
@@ -767,31 +792,52 @@ function LoadConfig(){
 
   //check for new mods in the workshop folder
   var p = path.join(colls['CrashdayPath'], '../../workshop/content/508980')
-  var foundNewMods = 0
+  var unlistedMods = 0
+  var listedMods = 0
+  var emptyFolders = 0
+  var otherFiles = 0
   if(fs.existsSync(p)){
     fs.readdirSync(p).forEach(file => {
       var foundFile = false
       var name = parseInt(file, 10)
-      //skip not numbered .cpk's
-      if(name == NaN) return
+      //skip not numbered folder names
+      if(name == NaN) {
+        otherFiles++
+        return
+      }
+      
+      folder = fs.statSync(path.join(p, file))
+      if(!folder.isDirectory()) {
+        otherFiles++
+        return
+      }
+      //check there is a mod file in mod folder
+      files = fs.readdirSync(path.join(p, file))
+      if(files.length == 0) {
+        emptyFolders++
+        return
+      }
 
       for(n in cfg['WorkshopItems'])
       {
         if(cfg['WorkshopItems'][n][0] == name)
         {
+          listedMods++
           foundFile = true
         }
       }
       if(!foundFile){
         cfg['WorkshopItems'].push([name, false])
-        foundNewMods += 1
+        unlistedMods++
       }
     })
   }
 
-  if(foundNewMods > 0){
+  console.log(`Found ${listedMods} listed mods, ${unlistedMods} unlisted mods, ${emptyFolders} empty folders and ${otherFiles} other files in Workshop folder`)
+
+  if(unlistedMods > 0){
     $.toast({title: 'New mods found',
-             content: 'Launcher found and added ' + foundNewMods + ' new mods.',
+             content: 'Launcher found and added ' + unlistedMods + ' new mods.',
              type: 'info', delay: 5000, container: $('#toaster')})
   }
 

@@ -8,7 +8,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
-## [1.7.1, 1.7.2] 2020-09-23
+## [1.7.4] 2020-10-01
+### Added
+- Added a notification when CD path is saved.
+- Added some better console logging for better debugging.
+### Fixed
+- Empty mod folders are not loaded from workshop folder now (thanks OutBlast).
+
+## [1.7.1, 1.7.2, 1.7.3] 2020-09-23
 Fixed build errors?
 
 ## [1.7.0] 2020-09-23

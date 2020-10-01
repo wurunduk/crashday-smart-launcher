@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, ipcMain } = require('electron')
+const {nativeImage, app, BrowserWindow, ipcMain } = require('electron')
 const {autoUpdater} = require('electron-updater')
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -10,7 +10,8 @@ function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 1280, height: 720, webPreferences: {
       nodeIntegration: true,
-    }})
+    }, icon: nativeImage.createFromPath(__dirname + '/img/icon.png')
+  })
 
   // and load the index.html of the app.
   mainWindow.loadFile('app/index.html')
