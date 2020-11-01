@@ -1,7 +1,7 @@
 {
   "build": {
     "appId": "com.github.wurunduk.crashday-smart-launcher",
-    "productName": "Crashday smart launcher",
+    "productName": "Crashday Smart Launcher",
     "mac": {
       "category": "public.app-category.utilities"
     },
@@ -20,7 +20,7 @@
     ]
   },
   "name": "crashday-smart-launcher",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "A better launcher for Crashday:Redline edition",
   "author": "Wurunduk",
   "license": "MIT",

@@ -267,21 +267,25 @@ function UpdateModlistData()
 }
 
 function rowStyle(row, index){
-  var c=0,t=0,a=0,m=0
+  var c=0,t=0,tp=0,a=0,m=0
   if(row['tags'].includes('Car')) c = 1
   if(row['tags'].includes('Track')) t = 1
+  if(row['tags'].includes('Piece')) tp = 1
   if(row['tags'].includes('Ambience')) a = 1
   if(row['tags'].includes('Misc')) m = 1
 
-  if(c+t+a+m > 1) return{css:{
+  if(c+t+a+m > 1 || c+tp+a+m > 1) return{css:{
     color: 'orange'
   }}
 
   if(c) return{css:{
     color: 'red'
   }}
-  if(t) return{css:{
+  if(tp) return{css:{
     color: 'green'
+  }}
+  if(t) return{css:{
+    color: 'darkslategray'
   }}
   if(a) return{css:{
     color: 'LightSeaGreen'

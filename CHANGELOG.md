@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.7.5] 2020-11-01
+### Changed
+- Changed color of 'Track' mods to be different from 'Track Piece'
+
 ## [1.7.4] 2020-10-01
 ### Added
 - Added a notification when CD path is saved.
