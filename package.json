@@ -34,7 +34,7 @@
     "deploy": "electron-builder build --win --publish always"
   },
   "devDependencies": {
-    "electron": "^9.4.0",
+    "electron": "^15.5.5",
     "electron-builder": "^22.8.0"
   },
   "dependencies": {
