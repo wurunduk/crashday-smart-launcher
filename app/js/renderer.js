@@ -1,3 +1,7 @@
+// DISCLAIMER: All of this code is ass and I had no idea what I was doing when I wrote this.
+// You probably should not use this as a reference.
+
+
 // This file is required by the index.html file and will
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
@@ -7,12 +11,14 @@ const app = remote.app
 const path = require('path')
 const fs = require('fs')
 const Mousetrap = require('mousetrap')
-const { windowsStore } = require('process')
 
 Mousetrap.bind(['command+r', 'ctrl+r', 'f5'], () => {
 	remote.getCurrentWindow().reload()
 	return false // prevents default behavior and stops event from bubbling
 })
+
+let settingsPath = path.join(app.getPath('userData'), '../../Local/Crashday/config/')
+console.log('Settings path: ' + settingsPath)
 
 var activeModsAmount = 0
 var collectionModsAmount = 0
@@ -22,7 +28,7 @@ var selectedCollection = ''
 
 var cfg = LoadConfig()
 var launcherConfig = cfg[0]
-var collectionConfig = cfg[1]
+var collectionConfig = cfg[1] // Treated as smart launcher config. Don't write anything into CD's config as it overwrites all unknown changes.
 var steamAnswer = ''
 var missingMods = []
 SaveConfig()
@@ -33,6 +39,7 @@ ipcRenderer.on('app_version', (event, arg) => {
   $('#version').html('Version ' + arg.version)
 })
 
+$('#use-default-launcher').prop('checked', collectionConfig['UseDefaultLauncher'])
 $('#mods-testing').prop('checked', launcherConfig['ModTesting'])
 $('#mods-disabled').prop('checked', launcherConfig['DisableMods'])
 
@@ -105,11 +112,44 @@ $('#mods-disabled').on('click', function (){
   SaveConfig()
 })
 
+$('#use-default-launcher').on('click', function (){
+  collectionConfig['UseDefaultLauncher'] = $('#use-default-launcher').is(':checked')
+  SaveConfig()
+})
+
 $('#play').on('click', function(){
   SaveConfig()
   if($('#use-default-launcher').is(':checked')) shell.openExternal('steam://run/508980')
   else shell.openExternal('steam://run/508980//-skiplauncher/')
 })
+
+function GetFileDetailsFromSteam(requestParams, cb){
+  const requestJson = JSON.stringify(requestParams, undefined, 0)
+  const Http = new XMLHttpRequest()
+  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + requestJson
+  Http.open('GET', url)
+  Http.send()
+  console.groupCollapsed('Sent a request to Steam')
+  console.log(url)
+  console.groupEnd()
+
+  Http.onreadystatechange=function(){
+    if(this.readyState==4 && this.status==200){
+      const response = JSON.parse(Http.responseText)['response']
+
+      console.groupCollapsed('Steam answer')
+      console.log(response)
+      console.groupEnd()
+
+      cb(response)
+    }
+    else if(this.readyState == 4){
+      $.toast({title: 'Connection error',
+              content: 'Could not connect to steam servers. Response code ' + this.status,
+              type: 'error', delay: 5000, container: $('#toaster')})
+    }
+  }
+}
 
 function PrepareMissingModsModal(){
   $('#missing-mods-modal-loader').children().show()
@@ -195,48 +235,29 @@ function LoadWorkshop(){
   jsonParameter['appid'] = 508980
   jsonParameter['strip_description_bbcode'] = false
 
-  const Http = new XMLHttpRequest()
-  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
-  Http.open('GET', url)
-  Http.send()
+  GetFileDetailsFromSteam(jsonParameter, (response) => {
+    steamAnswer = response
 
-  console.groupCollapsed('Sent a request to Steam')
-  console.log(url)
-  console.groupEnd()
+    const table = {}
+    table['search'] = true
+    table['clickToSelect'] = true
+    table['maintainMetaData'] = true
+    table['detailView'] = true
+    table['detailViewIcon'] = true
+    table['detailFormatter'] = detailFormatter
+    table['iconsPrefix'] = 'icon'
+    table['icons'] = []
+    table['icons']['detailOpen'] = 'ion-md-information-circle-outline'
+    table['icons']['detailClose'] = 'ion-md-information-circle'
+    table['classes'] = 'table table-hover'
+    table['columns'] = [{checkbox: 'enabled', field: 'enabled', order: 'desc', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
+    table['rowStyle'] = rowStyle
 
-  Http.onreadystatechange=function(){
-    if(this.readyState==4 && this.status==200){
-      steamAnswer = JSON.parse(Http.responseText)['response']
+    $('.loading').children().hide()
+    $('#mods-table').bootstrapTable(table)
 
-      console.groupCollapsed('Steam answer')
-      console.log(steamAnswer)
-      console.groupEnd()
-
-      const table = {}
-      table['search'] = true
-      table['clickToSelect'] = true
-      table['maintainMetaData'] = true
-      table['detailView'] = true
-      table['detailViewIcon'] = true
-      table['detailFormatter'] = detailFormatter
-      table['iconsPrefix'] = 'icon'
-      table['icons'] = []
-      table['icons']['detailOpen'] = 'ion-md-information-circle-outline'
-      table['icons']['detailClose'] = 'ion-md-information-circle'
-      table['classes'] = 'table table-hover'
-      table['columns'] = [{checkbox: 'enabled', field: 'enabled', order: 'desc', sortable:true}, {field: 'id', title: 'ID', width: 60, sortable:true}, {field: 'title', title: 'Name', sortable: true}, {field: 'itemId', title: 'Item ID', sortable: true}, {field: 'tags', title: 'Tags', sortable: true}]
-      table['rowStyle'] = rowStyle
-
-      $('.loading').children().hide()
-      $('#mods-table').bootstrapTable(table)
-
-      UpdateModlistData()
-    }else if(this.readyState == 4){
-      $.toast({title: 'Connection error',
-             content: 'Could not connect to steam servers. Response code ' + this.status,
-             type: 'error', delay: 5000, container: $('#toaster')})
-    }
-  }
+    UpdateModlistData()
+  })
 }
 
 function UpdateModlistData()
@@ -486,17 +507,10 @@ $('#current-collection').on('uncheck-all.bs.table', function(e, rowsAfter, rowsB
   SaveConfig()
 })
 
-function GetCollectionFromLink(){
+function GetCollectionDetailsRequestJsonparamsById(id){
   var jsonParameter = {}
-  var collectionUrl
-  try {
-  	collectionUrl = new URL($('#steam-collection-link').val())
-  	collectionUrl = collectionUrl.searchParams.get('id')
-  } catch(e){
-  	collectionUrl = $('#steam-collection-link').val()
-  }
 
-  jsonParameter['publishedfileids'] = [collectionUrl]
+  jsonParameter['publishedfileids'] = [id]
   jsonParameter['includetags'] = true
   jsonParameter['includeadditionalpreviews'] = false
   jsonParameter['includechildren'] = true
@@ -509,59 +523,78 @@ function GetCollectionFromLink(){
   jsonParameter['appid'] = 508980
   jsonParameter['strip_description_bbcode'] = false
 
-  const Http = new XMLHttpRequest()
-  const url = 'https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=48AD6D31B973C68065FEEEFF16073494&input_json=' + JSON.stringify(jsonParameter, undefined, 0)
-  Http.open('GET', url)
-  Http.send()
+  return jsonParameter
+}
 
-  console.groupCollapsed('Sent a request to Steam')
-  console.log(url)
-  console.groupEnd()
+function FindNextAvailableCollectionName(name) {
+  if(!collectionConfig['Collections'].hasOwnProperty(name))
+    return name
 
-  Http.onreadystatechange=function(){
-    if(this.readyState==4 && this.status==200){
-      var response = JSON.parse(Http.responseText)['response']
+  var i = 1
+  while(collectionConfig['Collections'].hasOwnProperty(name + '-' + i)) i++
+ return name + '-' + i
+}
 
-      console.groupCollapsed('Steam answer')
-      console.log(response)
-      console.groupEnd()
+function AddModsToCollection(name, collectionId) {
+  GetFileDetailsFromSteam(GetCollectionDetailsRequestJsonparamsById(collectionId), (response) => {
+    if(response['publishedfiledetails'][0]['result'] != 1){
+      $.toast({title: 'Collection import error',
+        content: 'Steam could not find collection with id ' + collectionId,
+        type: 'error', delay: 5000, container: $('#toaster')})
+      return
+    }
 
-      if(response['publishedfiledetails'][0]['result'] != 1){
-      	$.toast({title: 'Collection import error',
-             content: 'Steam could not find collection with id ' + collectionUrl,
-             type: 'error', delay: 5000, container: $('#toaster')})
-      	return
-      }
+    let updatingCollection = name != ''
 
-      var name = response['publishedfiledetails'][0]['title']
+    let modTitle = response['publishedfiledetails'][0]['title']
 
-      var i = 0
-	  //find the next available collection name
-	  if(collectionConfig['Collections'].hasOwnProperty(name)){
-	  	i = 1
-	  	while(collectionConfig['Collections'].hasOwnProperty(name + '-' + i)) i++
-	  }
-	  if(i != 0) name = name + '-' + i
+    if (!updatingCollection) {
+      name = modTitle
+      name = FindNextAvailableCollectionName(name)
+      collectionConfig['Collections'][name] = []
+    }
 
-	  collectionConfig['Collections'][name] = []
-    var count = 0
+    var modsCount = 0
+    var childCollectionsCount = 0
     for(i in response['publishedfiledetails'][0]['children']){
-      count ++
-    	collectionConfig['Collections'][name].push(parseInt(response['publishedfiledetails'][0]['children'][i]['publishedfileid']))
+      let info = response['publishedfiledetails'][0]['children'][i]
+      if (info['file_type'] == 0) { // Workshop item https://partner.steamgames.com/doc/api/ISteamRemoteStorage#EWorkshopFileType
+        modsCount ++
+        collectionConfig['Collections'][name].push(parseInt(info['publishedfileid']))
+      }
+      else if (info['file_type'] == 2) { // Collection of other mods
+        let id = parseInt(info['publishedfileid'])
+        childCollectionsCount ++
+        console.log('Adding child collection ' + id)
+        AddModsToCollection(name, id)
+      }
     }
-	  //save the newly added collection
-	  SaveConfig()
-	  //update the list
-	  UpdateCollectionsList()
-    $.toast({title: 'Collection imported',
-             content: 'New collection ' + name + ' was succesfully imported with ' + count + ' mods.',
-             type: 'success', delay: 5000, container: $('#toaster')})
-    }else if(this.readyState == 4){
-      $.toast({title: 'Connection error',
-             content: 'Could not connect to steam servers. Response code ' + this.status,
-             type: 'error', delay: 5000, container: $('#toaster')})
+    //save the newly added collection
+    SaveConfig()
+    //update the list
+    UpdateCollectionsList()
+    if (updatingCollection) {
+      $.toast({title: 'Child collection added',
+              content: 'Updated collection ' + name + ' from collection ' + modTitle + ' with ' + modsCount + ' mods and ' + childCollectionsCount + ' child collections.',
+              type: 'success', delay: 5000, container: $('#toaster')})
+    } else {
+      $.toast({title: 'Collection imported',
+              content: 'New collection ' + name + ' was succesfully imported with ' + modsCount + ' mods and ' + childCollectionsCount + ' child collections.',
+              type: 'success', delay: 5000, container: $('#toaster')})
     }
+  })
+}
+
+function GetCollectionFromLink(){
+  var collectionUrl
+  try {
+  	collectionUrl = new URL($('#steam-collection-link').val())
+  	collectionUrl = collectionUrl.searchParams.get('id')
+  } catch(e){
+  	collectionUrl = $('#steam-collection-link').val()
   }
+
+  AddModsToCollection('', collectionUrl)
 }
 
 function LoadCollections()
@@ -673,7 +706,6 @@ function modMoveUp(evt){
       var offset = $('.mod-move-down').offset()
       var height = $('.mod-move-down').height()
       y = evt.pageY - (offset.top + height/2)
-      console.log(y)
       window.scrollBy(0, -y)
       SaveConfig()
       return
@@ -713,7 +745,6 @@ function modMoveDown(evt){
       var offset = $('.mod-move-down').offset()
       var height = $('.mod-move-down').height()
       y = evt.pageY - (offset.top + height/2)
-      console.log(y)
       window.scrollBy(0, -y)
       SaveConfig()
       return
@@ -759,8 +790,8 @@ function humanFileSize(size) {
 //=============================================================================================
 
 function LoadConfig(){
-  var cfg = fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config'))
-  var colls = fs.readFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/collections.config'), {flag: 'a+'})
+  var cfg = fs.readFileSync(path.join(settingsPath, 'launcher.config'))
+  var colls = fs.readFileSync(path.join(settingsPath, 'collections.config'), {flag: 'a+'})
   try{
     cfg = JSON.parse(cfg)
   } catch(e){
@@ -779,6 +810,9 @@ function LoadConfig(){
 
   if(!colls.hasOwnProperty('Collections'))
     colls['Collections'] = {}
+
+  if(!colls.hasOwnProperty('UseDefaultLauncher'))
+    colls['UseDefaultLauncher'] = true
 
   if(!colls.hasOwnProperty('CrashdayPath')){
     colls['CrashdayPath'] = ''
@@ -809,7 +843,7 @@ function LoadConfig(){
         otherFiles++
         return
       }
-      
+
       folder = fs.statSync(path.join(p, file))
       if(!folder.isDirectory()) {
         otherFiles++
@@ -849,6 +883,6 @@ function LoadConfig(){
 }
 
 function SaveConfig(){
-  fs.writeFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/launcher.config'), JSON.stringify(launcherConfig, undefined, 4))
-  fs.writeFileSync(path.join(app.getPath('userData'), '../../Local/Crashday/config/collections.config'), JSON.stringify(collectionConfig, undefined, 4))
+  fs.writeFileSync(path.join(settingsPath, 'launcher.config'), JSON.stringify(launcherConfig, undefined, 4))
+  fs.writeFileSync(path.join(settingsPath, 'collections.config'), JSON.stringify(collectionConfig, undefined, 4))
 }

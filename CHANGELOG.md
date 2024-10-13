@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.7.6] 2024-10-13
+### Added
+- Collection import now imports all child collections too.
+- Use Default Launcher checkbox value is now saved and is true by default.
+
 ## [1.7.5] 2020-11-01
 ### Changed
 - Changed color of 'Track' mods to be different from 'Track Piece'
